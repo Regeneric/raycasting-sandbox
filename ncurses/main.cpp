@@ -29,11 +29,11 @@ struct {
 
     int ceiling;
     int floor;
-} map{.width = 16, .height = 16};
+} map{.width = 32, .height = 16};
 
 
 int main() {
-    setlocale(LC_ALL, "pl_PL.UTF-8");
+    setlocale(LC_ALL, "");
 
     initscr();
     resize_term(screen.height, screen.width);
@@ -59,22 +59,22 @@ int main() {
 
 
     std::string playground;
-        playground += "################";
-        playground += "#..............#";
-        playground += "#..............#";
-        playground += "#..............#";
-        playground += "#..............#";
-        playground += "#..........#...#";
-        playground += "#..............#";
-        playground += "#..........#...#";
-        playground += "#..............#";
-        playground += "#..........#...#";
-        playground += "#..............#";
-        playground += "#..............#";
-        playground += "#.......########";
-        playground += "#..............#";
-        playground += "#..............#";
-        playground += "################";
+        playground += "############    ###########     ";
+        playground += "#...............#..............#";
+        playground += "#...#....########......#########";
+        playground += "#..............##..#.......#...#";
+        playground += "#..#....##.....##.....##.......#";
+        playground += "#.......##............##...#...#";
+        playground += "#....#.........##..............#";
+        playground += "###........#...####....#.......#";
+        playground += "##.....##......##..............#";
+        playground += "#...#........####...#...#...####";
+        playground += "#..............................#";
+        playground += "###..####....#######....########";
+        playground += "####.####.......######.........#";
+        playground += "#.......#.......#..............#";
+        playground += "#..........##.........###......#";
+        playground += "#    ######################  ###";
 
 
     auto clk1 = std::chrono::system_clock::now();
@@ -88,8 +88,8 @@ int main() {
         float et = cet.count();
 
         switch(getch()) {
-            case 'a': player.posA -= (0.65f) * et; break;
-            case 'd': player.posA += (0.65f) * et; break;
+            case 'a': player.posA -= (0.35f) * et; break;
+            case 'd': player.posA += (0.35f) * et; break;
             case 'w':
                 player.posX += sinf(player.posA) * 2.0f * et;
                 player.posY += cosf(player.posA) * 2.0f * et;
@@ -175,37 +175,48 @@ int main() {
             for(int y = 0; y < screen.height; y++) {
                 if(y <= map.ceiling) mvprintw(y, x, " "); 
                 else if(y > map.ceiling && y < map.floor) {
-                    if(wallDistance <= player.depth/4.0f)     attron(COLOR_PAIR(1));    // Close
+                    if(wallDistance <= player.depth/4.0f)     attron(COLOR_PAIR(1));  // Close
                     else if(wallDistance < player.depth/3.0f) attron(COLOR_PAIR(2));
                     else if(wallDistance < player.depth/2.0f) attron(COLOR_PAIR(3));
                     else if(wallDistance < player.depth)      attron(COLOR_PAIR(4));
-                    else attron(COLOR_PAIR(5));    // Far
+                    else {attron(COLOR_PAIR(5)); mvprintw(y, x, " ");}  // Far
 
-                    if(wallBoundry) mvprintw(y, x, "|");
+                    // if(wallDistance <= player.depth/4.0f)     {attron(COLOR_PAIR(1)); mvaddstr(y, x, "\xe2\x96\x93");}    // Close
+                    // else if(wallDistance < player.depth/3.0f) {attron(COLOR_PAIR(2)); mvaddstr(y, x, "\xe2\x96\x93");}
+                    // else if(wallDistance < player.depth/2.0f) {attron(COLOR_PAIR(3)); mvaddstr(y, x, "\xe2\x96\x92");}
+                    // else if(wallDistance < player.depth)      {attron(COLOR_PAIR(4)); mvaddstr(y, x, "\xe2\x96\x91");}
+                    // else {attron(COLOR_PAIR(5)); mvprintw(y, x, " ");}  // Far
+
+                    if(wallBoundry) mvaddstr(y, x, "┃"); //mvprintw(y, x, "|");
+                    else if(wallDistance > player.depth) {attron(COLOR_PAIR(5)); mvprintw(y, x, " ");}
                     else mvprintw(y, x, "#");
+                    // else mvaddstr(y, x, "\xe2\x96\x88");
 
                 } else {
                     float b = 1.0f - (((float)y - screen.height/2.0f) / ((float)screen.height/2.0f));
                     
-                    if(b < 0.25)      {attron(COLOR_PAIR(1)); mvprintw(y, x, "#");}
-                    else if(b < 0.5)  {attron(COLOR_PAIR(2)); mvprintw(y, x, "x");}
-                    else if(b < 0.75) {attron(COLOR_PAIR(3)); mvprintw(y, x, ".");}
-                    else if(b < 0.9)  {attron(COLOR_PAIR(4)); mvprintw(y, x, "-");}
+                    if(b < 0.25)      {attron(COLOR_PAIR(2)); mvprintw(y, x, "x");}
+                    else if(b < 0.5)  {attron(COLOR_PAIR(3)); mvprintw(y, x, "*");}
+                    else if(b < 0.75) {attron(COLOR_PAIR(4)); mvprintw(y, x, "-");}
+                    else if(b < 0.9)  {attron(COLOR_PAIR(4)); mvprintw(y, x, ".");}
                     else {attron(COLOR_PAIR(5)); mvprintw(y, x, " ");}
                 }
 
-                // Framerate and player position
-                mvprintw(0, 0, "X=%3.2f, Y=%3.2f, A=%3.2f, FPS=%3.2f", player.posX, player.posY, player.posA, 1.0f/et);
-                refresh();
+                // refresh();
             }
+
+            // Framerate and player position
+            mvprintw(0, 0, "X=%3.2f, Y=%3.2f, A=%3.2f, FPS=%3.2f", player.posX, player.posY, player.posA, 1.0f/et);
 
             // Minimap
             for(int mx = 0; mx < map.width; mx++) {
-                for(int my = 0; my < map.width; my++) {
-                    char c = playground[my * map.width + mx];
+                for(int my = 0; my < map.height; my++) {
+                    char c = playground[my*map.width + mx];
                     mvprintw(my+1, mx, &c);
                 }
             } mvprintw((int)player.posY+1, (int)player.posX, "P");
+
+            refresh();
         }
     } 
     
