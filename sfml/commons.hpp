@@ -22,6 +22,11 @@ namespace hkk {
     // Distance between two points
     static inline float dist(sf::Vector2f a, sf::Vector2f b) {return sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));}
 
+    // Re-maps a number from one range to another.
+    template<typename T>
+    static inline T map(T number, T inMin, T inMax, T outMin, T outMax) {return (number-inMin) * (outMax-outMin)/(inMax-inMin) + outMin;}
+
+
     struct Line {
         sf::VertexArray line;
         sf::VertexArray getLine() {return line;}
@@ -60,14 +65,16 @@ namespace hkk {
         Rect(float x1, float y1, float x2, float y2) {
             rect.setPosition(sf::Vector2f(x1, y1));
             rect.setSize(sf::Vector2f(x2, y2));
-            rect.setFillColor(sf::Color::Black);
+            rect.setFillColor(sf::Color::White);
         }
         Rect(sf::Vector2f pos, sf::Vector2f size) {
             rect.setPosition(pos);
             rect.setSize(size);
-            rect.setFillColor(sf::Color::Black);
+            rect.setFillColor(sf::Color::White);
         }
-        
+
+        void fill(sf::Color color) {rect.setFillColor(color);}
+
         // sf::VertexArray l1;
         // sf::VertexArray l2;
         // sf::VertexArray l3;

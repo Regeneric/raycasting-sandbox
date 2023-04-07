@@ -49,35 +49,50 @@ std::optional<sf::Vector2f> Ray::cast(Boundry *wall, hkk::Shape shape) {
     float x4 = position->x + direction.x;
     float y4 = position->y + direction.y;
 
-    if(shape == hkk::LineShape) {
-        // Naming of the variables comes from the Wikipedia page
-        float den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
-        if(den == 0) return std::nullopt;  // Lines are parallel
+    // Naming of the variables comes from the Wikipedia page
+    float den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    if(den == 0) return std::nullopt;  // Lines are parallel
 
-        float t =  ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / den;
-        float u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / den;
+    float t =  ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / den;
+    float u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / den;
 
-        if(t > 0 && t < 1  &&  u > 0) {
-            sf::Vector2f point;
-                point.x = x1 + t*(x2-x1);
-                point.y = y1 + t*(y2-y1);
-            return point;
-        } return std::nullopt;  // Function may not return anything - same as `return {}`
-    } else if(shape == hkk::RectShape) {
-        // Naming of the variables comes from the Wikipedia page
-        float den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
-        if(den == 0) return std::nullopt;  // Lines are parallel
+    if(t > 0 && t < 1  &&  u > 0) {
+        sf::Vector2f point;
+            point.x = x1 + t*(x2-x1);
+            point.y = y1 + t*(y2-y1);
+        return point;
+    } return std::nullopt;  // Function may not return anything - same as `return {}`
 
-        float t =  ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / den;
-        float u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / den;
 
-        if(t > 0 && t < 1  &&  u > 0) {
-            sf::Vector2f point;
-                point.x = x1 + t*(x2-x1);
-                point.y = y1 + t*(y2-y1);
-            return point;
-        } return std::nullopt;  // Function may not return anything - same as `return {}`
-    } else return std::nullopt;
+    // if(shape == hkk::LineShape) {
+    //     // Naming of the variables comes from the Wikipedia page
+    //     float den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    //     if(den == 0) return std::nullopt;  // Lines are parallel
+
+    //     float t =  ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / den;
+    //     float u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / den;
+
+    //     if(t > 0 && t < 1  &&  u > 0) {
+    //         sf::Vector2f point;
+    //             point.x = x1 + t*(x2-x1);
+    //             point.y = y1 + t*(y2-y1);
+    //         return point;
+    //     } return std::nullopt;  // Function may not return anything - same as `return {}`
+    // } else if(shape == hkk::RectShape) {
+    //     // Naming of the variables comes from the Wikipedia page
+    //     float den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    //     if(den == 0) return std::nullopt;  // Lines are parallel
+
+    //     float t =  ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / den;
+    //     float u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / den;
+
+    //     if(t > 0 && t < 1  &&  u > 0) {
+    //         sf::Vector2f point;
+    //             point.x = x1 + t*(x2-x1);
+    //             point.y = y1 + t*(y2-y1);
+    //         return point;
+    //     } return std::nullopt;  // Function may not return anything - same as `return {}`
+    // } else return std::nullopt;
 }
 
 

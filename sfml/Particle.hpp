@@ -10,11 +10,11 @@
 
 class Particle {
 public:
-    Particle(float x, float y, std::optional<int> angle);
+    Particle(float x, float y, std::optional<int> angle, std::optional<int> fov);
     ~Particle() {}
 
     void draw(sf::RenderWindow *window);
-    void look(std::vector<Boundry> *walls, sf::RenderWindow *window);
+    std::vector<float> look(std::vector<Boundry> *walls, sf::RenderWindow *window);
     void update(float x, float y);
 private:
     sf::Vector2f position;

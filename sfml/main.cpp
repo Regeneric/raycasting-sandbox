@@ -11,13 +11,13 @@
 #include "Particle.hpp"
 
 
-static constexpr int WIDTH = 600;
-static constexpr int HEIGHT = 600;
+static constexpr int WIDTH = 400;
+static constexpr int HEIGHT = 400;
 
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "SFML Raycasting", sf::Style::Close);
-        window.setView(sf::View(sf::FloatRect(0, 0, WIDTH, HEIGHT)));   // Viewport
+    sf::RenderWindow window(sf::VideoMode(800, HEIGHT), "SFML Raycasting", sf::Style::Close);
+        window.setView(sf::View(sf::FloatRect(0, 0, 800, HEIGHT)));   // Viewport
 
 
     std::random_device rd;                            // Obtain a random number from hardware
@@ -48,14 +48,17 @@ int main() {
         walls.push_back(wall);
     }
 
-    Boundry rectWall(10.0, 10.0, 100.0, 100.0);
-    Particle dot(WIDTH/2, HEIGHT/2, 1);
+    // Window border
+    walls.push_back(Boundry(1, 1, 1, HEIGHT));
+    walls.push_back(Boundry(1, 1, WIDTH, 1));
+    walls.push_back(Boundry(WIDTH, 0, WIDTH, HEIGHT));
+    walls.push_back(Boundry(WIDTH, HEIGHT, 0, HEIGHT));
 
-    std::vector<Boundry> rectWalls;
-        rectWalls.push_back(rectWall);
+    Particle dot(WIDTH/2, HEIGHT/2, 1, 40);
 
     sf::Vector2i pixelPos;
     sf::Vector2f worldPos;
+
 
     while(window.isOpen()) {
         sf::Event e;
@@ -68,14 +71,28 @@ int main() {
         worldPos = window.mapPixelToCoords(pixelPos);
 
         dot.draw(&window);
-        
         for(auto wall : walls) {
             wall.draw(&window, hkk::LineShape);
             // rectWall.draw(&window, hkk::RectShape);
-    
-            // dot.look(&walls, nullptr);   // We don't want to draw rays
-            dot.look(&walls, &window);      // We want to draw rays
-            // dot.look(&rectWalls, &window);
+        } 
+        
+
+        // std::vector<float> scene = dot.look(&walls, nullptr);   // We don't want to draw rays
+        std::vector<float> scene = dot.look(&walls, &window);      // We want to draw rays
+        float w = WIDTH / scene.size();
+
+        sf::Transform t;
+        t.translate(WIDTH, 0);
+
+        for(int idx = 0; auto s : scene) {
+            hkk::Rect r(idx*w, 0, w, HEIGHT);
+
+            // Farther away from wall means less brightness for single strip
+            float brightness = hkk::map((double)s, 0.0, (double)WIDTH, 255.0, 0.0);
+            r.fill(sf::Color(brightness, brightness, brightness, 255));
+
+            ++idx;
+            window.draw(r.rect, t);
         } dot.update(worldPos.x, worldPos.y);
 
         window.display();
