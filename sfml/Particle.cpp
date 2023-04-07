@@ -31,14 +31,14 @@ void Particle::draw(sf::RenderWindow *window) {
     for(auto ray : rays) ray.draw(window);
 }
 
-std::vector<float> Particle::look(std::vector<Boundry> *walls, sf::RenderWindow *window) {
+std::vector<float> Particle::look(std::vector<Boundry> walls, sf::RenderWindow *window) {
     std::vector<float> scene;
 
     for(auto &ray : rays) {
         sf::Vector2f closest(INFINITY, INFINITY);
         float max = INFINITY;
 
-        for(int idx = 0; auto wall : *walls) {
+        for(int idx = 0; auto wall : walls) {
             std::optional<sf::Vector2f> point = ray.cast(&wall, hkk::LineShape);
 
             if(point.has_value()) {

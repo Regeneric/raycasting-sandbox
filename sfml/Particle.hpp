@@ -14,7 +14,7 @@ public:
     ~Particle() {}
 
     void draw(sf::RenderWindow *window);
-    std::vector<float> look(std::vector<Boundry> *walls, sf::RenderWindow *window);
+    std::vector<float> look(std::vector<Boundry> walls, sf::RenderWindow *window);
     void update(float x, float y);
     void rotate(float a);
     void move(float m);

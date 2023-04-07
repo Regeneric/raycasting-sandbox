@@ -70,7 +70,7 @@ int main() {
         
 
         // std::vector<float> scene = dot.look(&walls, nullptr);   // We don't want to draw rays
-        std::vector<float> scene = dot.look(&walls, &window);      // We want to draw rays
+        std::vector<float> scene = dot.look(walls, &window);      // We want to draw rays
         float w = WIDTH / scene.size();
 
         sf::Transform t;
