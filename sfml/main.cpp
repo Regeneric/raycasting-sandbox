@@ -15,6 +15,10 @@ static constexpr int WIDTH = 400;
 static constexpr int HEIGHT = 400;
 
 
+// THIS EXAMPLE DOES NOT UTILIZE RAY MARCHING
+// IT'S BASED ONLY ON LINE-LINE INTERSECTION
+
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(800, HEIGHT), "SFML Raycasting", sf::Style::Close);
         window.setView(sf::View(sf::FloatRect(0, 0, 800, HEIGHT)));   // Viewport
