@@ -83,7 +83,8 @@ int main() {
             double wq = (double)(WIDTH*WIDTH);
             float brightness = hkk::map(sq, 0.0, wq, 255.0, 0.0);
             
-            float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, 0.0);
+            // float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, 0.0);
+            float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, (double)1/s);
 
             hkk::Rect r(idx*w + w/2, HEIGHT/2, w, height, hkk::Center);
             r.fill(sf::Color(brightness, brightness, brightness, 255));

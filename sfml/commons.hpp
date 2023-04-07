@@ -23,6 +23,9 @@ namespace hkk {
     // Convert degrees to radians
     static inline float radians(float angle) {return angle * (M_PI/180.0f);}
 
+    // Convert radians to degrees
+    static inline float degrees(float angle) {return angle * 180.f/M_PI;}
+
     // Unit vector - heading based on angle in radians
     static inline sf::Vector2f fromAngle(float angle) {return sf::Vector2f(cos(angle), sin(angle));}
 
