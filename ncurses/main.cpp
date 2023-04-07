@@ -67,8 +67,8 @@ int main() {
         playground += "#.......##............##...#...#";
         playground += "#....#.........##..............#";
         playground += "###........#...####....#.......#";
-        playground += "##.....##......##..............#";
-        playground += "#...#........####...#...#...####";
+        playground += "##...#.........##..............#";
+        playground += "#...##.......####...#...#...####";
         playground += "#..............................#";
         playground += "###..####....#######....########";
         playground += "####.####.......######.........#";
@@ -211,7 +211,7 @@ int main() {
             // Minimap
             for(int mx = 0; mx < map.width; mx++) {
                 for(int my = 0; my < map.height; my++) {
-                    char c = playground[my*map.width + mx];
+                    char c = playground[my*map.width + mx+2];
                     mvprintw(my+1, mx, &c);
                 }
             } mvprintw((int)player.posY+1, (int)player.posX, "P");
