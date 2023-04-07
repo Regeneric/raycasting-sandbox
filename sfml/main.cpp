@@ -74,7 +74,7 @@ int main() {
     
             // dot.look(&walls, nullptr);   // We don't want to draw rays
             dot.look(&walls, &window);      // We want to draw rays
-            dot.look(&rectWalls, &window);
+            // dot.look(&rectWalls, &window);
         } dot.update(worldPos.x, worldPos.y);
 
         window.display();
