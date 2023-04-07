@@ -1,6 +1,7 @@
 #include "Ray.hpp"
 #include "commons.hpp"
 
+#include <iostream>
 #include <vector>
 
 void Ray::draw(sf::RenderWindow *window) {

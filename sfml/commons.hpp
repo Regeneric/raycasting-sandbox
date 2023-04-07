@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <optional>
 
 namespace hkk {
     // Normalize vector
@@ -11,6 +12,12 @@ namespace hkk {
 
         vec.x *= magInv;
         vec.y *= magInv;
+    }
+
+    // Set vector magnitude
+    static void mag(sf::Vector2f &vec, float m) {
+        vec.x *= m;
+        vec.y *= m;
     }
 
     // Convert degrees to radians
@@ -25,6 +32,9 @@ namespace hkk {
     // Re-maps a number from one range to another.
     template<typename T>
     static inline T map(T number, T inMin, T inMax, T outMin, T outMax) {return (number-inMin) * (outMax-outMin)/(inMax-inMin) + outMin;}
+
+    // Get angle from unit vector
+    static inline double heading(sf::Vector2f vec) {return atan2(vec.y, vec.x);}
 
 
     struct Line {
@@ -59,18 +69,30 @@ namespace hkk {
         }
     };
 
+
+    enum RectMode {
+        Center,
+        Normal
+    };
+
     struct Rect {
         sf::RectangleShape rect;
 
-        Rect(float x1, float y1, float x2, float y2) {
+        Rect(float x1, float y1, float x2, float y2, std::optional<RectMode> mode) {
             rect.setPosition(sf::Vector2f(x1, y1));
             rect.setSize(sf::Vector2f(x2, y2));
             rect.setFillColor(sf::Color::White);
+
+            if(mode.has_value() && mode.value() == RectMode::Center) rect.setOrigin(x2/2, y2/2);
+            if(mode.has_value() && mode.value() == RectMode::Normal) rect.setOrigin(0, 0);
         }
-        Rect(sf::Vector2f pos, sf::Vector2f size) {
+        Rect(sf::Vector2f pos, sf::Vector2f size, std::optional<RectMode> mode) {
             rect.setPosition(pos);
             rect.setSize(size);
             rect.setFillColor(sf::Color::White);
+
+            if(mode.has_value() && mode.value() == RectMode::Center) rect.setOrigin(size.x/2, size.y/2);
+            if(mode.has_value() && mode.value() == RectMode::Normal) rect.setOrigin(0, 0);
         }
 
         void fill(sf::Color color) {rect.setFillColor(color);}

@@ -5,6 +5,7 @@
 #include "Boundry.hpp"
 #include "commons.hpp"
 
+#include <iostream>
 #include <optional>
 #include <cmath>
 
@@ -17,6 +18,10 @@ public:
     void draw(sf::RenderWindow *window);
     std::optional<sf::Vector2f> cast(Boundry *wall, hkk::Shape shape);
     void look(float x, float y);
+    inline void setAngle(float heading) {direction = hkk::fromAngle(heading);}
+
+    sf::Vector2f getDirection() {return direction;}
+
 private:
     float angle;
     sf::Vector2f *position;

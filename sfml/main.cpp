@@ -26,19 +26,6 @@ int main() {
     std::uniform_int_distribution<> rngH(0, HEIGHT);  // Define the range
 
 
-    std::vector<std::string> map {
-        "##########",
-        "#........#",
-        "#........#",
-        "#........#",
-        "#........#",
-        "#........#",
-        "#........#",
-        "#........#",
-        "#........#",
-        "##########"
-    };
-
     std::vector<Boundry> walls;
     for(int i = 0; i != 5; ++i) {
         float x1 = rngW(gen);  float x2 = rngW(gen);
@@ -54,7 +41,7 @@ int main() {
     walls.push_back(Boundry(WIDTH, 0, WIDTH, HEIGHT));
     walls.push_back(Boundry(WIDTH, HEIGHT, 0, HEIGHT));
 
-    Particle dot(WIDTH/2, HEIGHT/2, 1, 40);
+    Particle dot(WIDTH/2, HEIGHT/2, 0.20, 40);
 
     sf::Vector2i pixelPos;
     sf::Vector2f worldPos;
@@ -66,6 +53,11 @@ int main() {
             switch(e.type) {case sf::Event::Closed: window.close(); break;}
         // window.clear(sf::Color(80, 80, 80));
         window.clear(sf::Color::Black);
+
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {dot.move( 0.25);}
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {dot.move(-0.25);}
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {dot.rotate( 0.005);}
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {dot.rotate(-0.005);}
 
         pixelPos = sf::Mouse::getPosition(window);
         worldPos = window.mapPixelToCoords(pixelPos);
@@ -85,15 +77,23 @@ int main() {
         t.translate(WIDTH, 0);
 
         for(int idx = 0; auto s : scene) {
-            hkk::Rect r(idx*w, 0, w, HEIGHT);
-
             // Farther away from wall means less brightness for single strip
-            float brightness = hkk::map((double)s, 0.0, (double)WIDTH, 255.0, 0.0);
+            // Using inverse square law for better effect
+            double sq = (double)(s*s);
+            double wq = (double)(WIDTH*WIDTH);
+            float brightness = hkk::map(sq, 0.0, wq, 255.0, 0.0);
+            
+            float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, 0.0);
+
+            hkk::Rect r(idx*w + w/2, HEIGHT/2, w, height, hkk::Center);
             r.fill(sf::Color(brightness, brightness, brightness, 255));
 
             ++idx;
             window.draw(r.rect, t);
-        } dot.update(worldPos.x, worldPos.y);
+        } 
+        
+        // Move dot with mouse
+        // dot.update(worldPos.x, worldPos.y);
 
         window.display();
     } return 0;
