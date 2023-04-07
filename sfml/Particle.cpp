@@ -45,7 +45,7 @@ std::vector<float> Particle::look(std::vector<Boundry> walls, sf::RenderWindow *
                 float dist = hkk::dist(position, point.value());
                 
                 // float rd = sqrt((ray.getDirection().x * ray.getDirection().y) + (ray.getDirection().y*ray.getDirection().y) * cos(fov/2 + ((float)fov/rays.size()) * hkk::radians(idx)));
-                // dist/rd;
+                // dist /= rd;
                 
                 float ang = hkk::heading(ray.getDirection()) - heading;
                 dist *= cos(ang);

@@ -21,10 +21,10 @@ namespace hkk {
     }
 
     // Convert degrees to radians
-    static inline float radians(float angle) {return angle * (M_PI/180.0f);}
+    static inline constexpr float radians(float angle) {return angle * (M_PI/180.0f);}
 
     // Convert radians to degrees
-    static inline float degrees(float angle) {return angle * 180.f/M_PI;}
+    static inline constexpr float degrees(float angle) {return angle * 180.f/M_PI;}
 
     // Unit vector - heading based on angle in radians
     static inline sf::Vector2f fromAngle(float angle) {return sf::Vector2f(cos(angle), sin(angle));}
@@ -34,7 +34,7 @@ namespace hkk {
 
     // Re-maps a number from one range to another.
     template<typename T>
-    static inline T map(T number, T inMin, T inMax, T outMin, T outMax) {return (number-inMin) * (outMax-outMin)/(inMax-inMin) + outMin;}
+    static inline constexpr T map(T number, T inMin, T inMax, T outMin, T outMax) {return (number-inMin) * (outMax-outMin)/(inMax-inMin) + outMin;}
 
     // Get angle from unit vector
     static inline double heading(sf::Vector2f vec) {return atan2(vec.y, vec.x);}
