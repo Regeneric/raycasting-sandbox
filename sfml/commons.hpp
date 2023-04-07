@@ -29,11 +29,11 @@ namespace hkk {
         Line(sf::Vector2f startPos, sf::Vector2f endPos) {
             sf::Vertex start;
                 start.position = startPos;
-                start.color = sf::Color::Red;
+                start.color = sf::Color::White;
 
             sf::Vertex end;
                 end.position = endPos;
-                end.color = sf::Color::Red;
+                end.color = sf::Color::White;
 
             line.append(start);
             line.append(end);
@@ -42,11 +42,11 @@ namespace hkk {
         Line(float x1, float y1, float x2, float y2) {
             sf::Vertex start;
                 start.position = sf::Vector2f(x1, y1);
-                start.color = sf::Color::Red;
+                start.color = sf::Color::White;
 
             sf::Vertex end;
                 end.position = sf::Vector2f(x2, y2);
-                end.color = sf::Color::Red;
+                end.color = sf::Color::White;
 
             line.append(start);
             line.append(end);

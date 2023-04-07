@@ -10,7 +10,7 @@
 
 class Particle {
 public:
-    Particle(float x, float y);
+    Particle(float x, float y, std::optional<int> angle);
     ~Particle() {}
 
     void draw(sf::RenderWindow *window);

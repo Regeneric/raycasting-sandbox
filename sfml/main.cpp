@@ -49,7 +49,7 @@ int main() {
     }
 
     Boundry rectWall(10.0, 10.0, 100.0, 100.0);
-    Particle dot(WIDTH/2, HEIGHT/2);
+    Particle dot(WIDTH/2, HEIGHT/2, 1);
 
     std::vector<Boundry> rectWalls;
         rectWalls.push_back(rectWall);
@@ -61,7 +61,8 @@ int main() {
         sf::Event e;
         while(window.pollEvent(e))
             switch(e.type) {case sf::Event::Closed: window.close(); break;}
-        window.clear(sf::Color(80, 80, 80));
+        // window.clear(sf::Color(80, 80, 80));
+        window.clear(sf::Color::Black);
 
         pixelPos = sf::Mouse::getPosition(window);
         worldPos = window.mapPixelToCoords(pixelPos);
@@ -70,7 +71,7 @@ int main() {
         
         for(auto wall : walls) {
             wall.draw(&window, hkk::LineShape);
-            rectWall.draw(&window, hkk::RectShape);
+            // rectWall.draw(&window, hkk::RectShape);
     
             // dot.look(&walls, nullptr);   // We don't want to draw rays
             dot.look(&walls, &window);      // We want to draw rays

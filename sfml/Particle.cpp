@@ -1,10 +1,10 @@
 #include "Particle.hpp"
 #include "commons.hpp"
 
-Particle::Particle(float x, float y) {
+Particle::Particle(float x, float y, std::optional<int> angle) {
     position = sf::Vector2f(x, y);
 
-    for(int a = 0; a != 360; a += 10) {
+    for(int a = 0; a != 360; a += (angle.has_value() ? angle.value() : 10)) {
         Ray ray(&position, hkk::radians(a));
         rays.push_back(ray);
     }
