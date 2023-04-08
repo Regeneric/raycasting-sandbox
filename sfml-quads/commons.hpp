@@ -6,6 +6,9 @@
 #include <optional>
 #include <cmath>
 
+static constexpr int WIDTH  = 400;
+static constexpr int HEIGHT = 400;
+
 namespace hkk {
     enum Shape {
         Circle,
@@ -13,6 +16,7 @@ namespace hkk {
     };
 
     // Distance between two points
+    static inline float dist(float x1, float y1, float x2, float y2) {return sqrt(pow(x1-x2, 2) + pow(y1-y2, 2));}
     static inline float dist(sf::Vector2f a, sf::Vector2f b) {return sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));}
     static inline float dist(sf::Vector2f v) {return sqrt(v.x*v.x + v.y+v.y);}  // P -- C  ; v = C - P
 
@@ -55,7 +59,7 @@ namespace hkk {
     static inline constexpr float degrees(float angle) {return angle * 180.f/M_PI;}
 
     // Unit vector - heading based on angle in radians
-    static inline sf::Vector2f fromAngle(float angle) {return sf::Vector2f(cos(angle), sin(angle));}
+    static inline sf::Vector2f fromAngle(float angle) {return sf::Vector2f(cos(angle)/15, sin(angle)/15);}
 
     // Re-maps a number from one range to another.
     template<typename T>
@@ -72,11 +76,11 @@ namespace hkk {
         Line(sf::Vector2f startPos, sf::Vector2f endPos) {
             sf::Vertex start;
                 start.position = startPos;
-                start.color = sf::Color::White;
+                start.color = sf::Color::Red;
 
             sf::Vertex end;
                 end.position = endPos;
-                end.color = sf::Color::White;
+                end.color = sf::Color::Red;
 
             line.append(start);
             line.append(end);
@@ -85,11 +89,11 @@ namespace hkk {
         Line(float x1, float y1, float x2, float y2) {
             sf::Vertex start;
                 start.position = sf::Vector2f(x1, y1);
-                start.color = sf::Color::White;
+                start.color = sf::Color::Red;
 
             sf::Vertex end;
                 end.position = sf::Vector2f(x2, y2);
-                end.color = sf::Color::White;
+                end.color = sf::Color::Red;
 
             line.append(start);
             line.append(end);
@@ -124,5 +128,12 @@ namespace hkk {
         }
 
         void fill(sf::Color color) {rect.setFillColor(color);}
+    };
+
+    
+    struct MapConfig {
+        int width = 10;
+        int height = 10;
+        int cell = WIDTH/width;
     };
 }
