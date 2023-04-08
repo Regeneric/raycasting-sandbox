@@ -76,8 +76,9 @@ void cast(float pa, sf::Vector2f pos, hkk::MapConfig config, std::vector<int> ma
         }
 
 
-        if(distV < distH) {rx = vx; ry = vy; dist = distV;}
-        if(distH < distV) {rx = hx; ry = hy; dist = distH;}
+        sf::Color wallpaint;
+        if(distV < distH) {rx = vx; ry = vy; dist = distV; wallpaint.r = 230;}
+        if(distH < distV) {rx = hx; ry = hy; dist = distH; wallpaint.r = 179;}
 
         hkk::Line l(px, py, rx, ry);
         window->draw(l.line);
@@ -107,7 +108,8 @@ void cast(float pa, sf::Vector2f pos, hkk::MapConfig config, std::vector<int> ma
         t.translate(WIDTH-45, 0);
 
         sf::RectangleShape wall;
-            wall.setFillColor(sf::Color(brightness, brightness, brightness, 255));
+            // wall.setFillColor(sf::Color(brightness, brightness, brightness, 255));   // Brigthness based lighting
+            wall.setFillColor(wallpaint);                                               // Shade based lighting
             wall.setPosition(sf::Vector2f(r*8 + map.size()/2, HEIGHT/2));
             wall.setSize(sf::Vector2f(8, lineH));
             wall.setOrigin(wall.getSize().x/2, wall.getSize().y/2);
@@ -120,6 +122,9 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(800, HEIGHT), "Ray Marching", sf::Style::Close);
     window.setView(sf::View(sf::FloatRect(0, 0, 800, HEIGHT)));
 
+
+    std::cout << hkk::map(0.9f, 0.0f, 1.0f, 0.0f, 255.0f) << std::endl;
+    std::cout << hkk::map(0.7f, 0.0f, 1.0f, 0.0f, 255.0f) << std::endl;
 
     std::vector<int> map {
         1,1,1,1,1,1,1,1,1,1,
