@@ -6,8 +6,8 @@
 #include <optional>
 #include <cmath>
 
-static constexpr int WIDTH  = 400;
-static constexpr int HEIGHT = 400;
+static constexpr int WIDTH  = 512;
+static constexpr int HEIGHT = 512;
 
 namespace hkk {
     enum Shape {
@@ -72,6 +72,7 @@ namespace hkk {
     struct Line {
         sf::VertexArray line;
         sf::VertexArray getLine() {return line;}
+        void fill(sf::Color c) {line[0].color = c; line[0].color = c;}
 
         Line(sf::Vector2f startPos, sf::Vector2f endPos) {
             sf::Vertex start;
@@ -128,12 +129,5 @@ namespace hkk {
         }
 
         void fill(sf::Color color) {rect.setFillColor(color);}
-    };
-
-    
-    struct MapConfig {
-        int width = 10;
-        int height = 10;
-        int cell = WIDTH/width;
     };
 }
