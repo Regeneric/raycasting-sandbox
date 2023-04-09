@@ -1,6 +1,5 @@
 #pragma once
 
-// #include "Player.hpp"
 #include "Wall.hpp"
 
 class Player;
@@ -9,5 +8,5 @@ public:
     Ray() {}
     ~Ray() {}
 
-    void cast(float f, Player &player, Wall wall, sf::RenderWindow *window);
+    void cast(float f, Player &player, Wall *wall, sf::RenderWindow *window);
 };

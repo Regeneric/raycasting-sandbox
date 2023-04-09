@@ -21,11 +21,11 @@ public:
     constexpr float fov() {return _fov;}
 
     void rotate(float a);
-    void move(float a);
-    void move(sf::Vector2f p);
+    void move(float a, Wall *map);
+    void move(sf::Vector2f p, Wall *map);
 
     void draw(sf::RenderWindow *window) {window->draw(_player);};
-    void look(Wall map, sf::RenderWindow *window);
+    void look(Wall *map, sf::RenderWindow *window);
 
 
     void color(sf::Color c) {_color = c;}
@@ -45,12 +45,14 @@ public:
 private:
     float _fov;
     sf::RectangleShape _player;
+    // sf::CircleShape _player;
 
     sf::Color _color;
 
     float _rotation;
     sf::Vector2f _size;
     sf::Vector2f _position;
+    sf::FloatRect _nextPosition;
 
     hkk::Shape _shape;
 

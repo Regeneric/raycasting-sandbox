@@ -20,10 +20,16 @@ public:
 
     void grid(std::vector<int> g) {_grid = g;}
     constexpr std::vector<int> grid() {return _grid;}
+
+    std::vector<sf::FloatRect> bounds() {return _wallsBounds;}
+
 private:
     int _cell;
     int _width;
     int _height;
 
     std::vector<int> _grid;
+    std::vector<sf::FloatRect> _wallsBounds; 
+
+    void initBounds();
 };

@@ -6,17 +6,17 @@
 
 #include <iostream>
 
-void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
+void Ray::cast(float f, Player &player, Wall *map, sf::RenderWindow *window) {
     float dist = 0.0f;
 
     int dof = 0, fov = f;
     float rayX = 0.0f, rayY = 0.0f, rayAngle = 0.0f;
-    float rayStep = 0.75f;
+    float rayStep = 1.0f;
 
-    int cell = map.cell(), mapW = map.width(), mapH = map.height(), mapTV = 0, mapTH = 0;
+    int cell = map->cell(), mapW = map->width(), mapH = map->height(), mapTV = 0, mapTH = 0;
     int mapX = 0.0f, mapY = 0.0f, mapPos = 0.0f;
     float offsetX = 0.0f, offsetY = 0.0f;
-    std::vector<int> mapGrid = map.grid();
+    std::vector<int> mapGrid = map->grid();
 
     float playerX = player.position().x;
     float playerY = player.position().y;
@@ -136,16 +136,16 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             rayX = vertX;
             rayY = vertY;
             dist = distV;
-            
-            // wallpaint.r = 230;
-            // distSqr = (dist*dist);
-            // brightness = hkk::map(distSqr, 0.0f, widthSqr, 255.0f, 0.0f);     // Brightness based wall shading
+
+
+            distSqr = (dist*dist);
+            brightness = hkk::map(distSqr, 0.0f, widthSqr, 255.0f, 0.0f);     // Brightness based wall shading
         
             switch(mapTV) {
-                case 1: wallpaint.r = 230; break;
-                case 2: wallpaint.g = 230; break;
-                case 3: wallpaint.b = 230; break;
-                case 4: {wallpaint.r = 230; wallpaint.g = 230;} break;
+                case 1: wallpaint.r = brightness; break;
+                case 2: wallpaint.g = brightness; break;
+                case 3: wallpaint.b = brightness; break;
+                case 4: {wallpaint.r = brightness; wallpaint.g = brightness;} break;
                 default: break;
             }
         }
@@ -154,22 +154,20 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             rayY = horY;
             dist = distH;
 
-            // wallpaint.r = 179;
-            // distSqr = (dist*dist);
-            // brightness = hkk::map(distSqr, 0.0f, widthSqr, 230.0f, 0.0f);     // Brightness based wall shading
+
+            distSqr = (dist*dist);
+            brightness = hkk::map(distSqr, 0.0f, widthSqr, 230.0f, 0.0f);     // Brightness based wall shading
         
             switch(mapTH) {
-                case 1: wallpaint.r = 179; break;
-                case 2: wallpaint.g = 179; break;
-                case 3: wallpaint.b = 179; break;
-                case 4: {wallpaint.r = 179; wallpaint.g = 179;} break;
+                case 1: wallpaint.r = brightness; break;
+                case 2: wallpaint.g = brightness; break;
+                case 3: wallpaint.b = brightness; break;
+                case 4: {wallpaint.r = brightness; wallpaint.g = brightness;} break;
                 default: break;
             }
         }
 
-        // if(window != nullptr) window->draw(hkk::Line(playerX, playerY, rayX, rayY).line);
-        if(window != nullptr) window->draw(sw::Line(sf::Vector2f(playerX, playerY), sf::Vector2f(rayX, rayY), 0.0f, wallpaint));
-
+        window->draw(sw::Line(sf::Vector2f(playerX, playerY), sf::Vector2f(rayX, rayY), 0.0f, wallpaint));
 
         // 3D walls
         rayAngle += hkk::radians(rayStep);  // Move one ray radian(rayStep) from another
