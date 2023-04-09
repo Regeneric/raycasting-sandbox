@@ -9,6 +9,7 @@
 #include "Boundry.hpp"
 #include "Ray.hpp"
 #include "Particle.hpp"
+#include "SelbaWard/Line.hpp"
 
 
 static constexpr int WIDTH = 400;
@@ -86,15 +87,25 @@ int main() {
             double sq = (double)(s*s);
             double wq = (double)(WIDTH*WIDTH);
             float brightness = hkk::map(sq, 0.0, wq, 255.0, 0.0);
-            
-            // float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, 0.0);
-            float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, (double)1/s);
 
-            hkk::Rect r(idx*w + w/2, HEIGHT/2, w, height, hkk::Center);
-            r.fill(sf::Color(brightness, brightness, brightness, 255));
+            // float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, 0.0);
+            // float height = hkk::map((double)s, 0.0, (double)WIDTH, (double)HEIGHT, (double)1/s);
+            float lineH = (w*4000)/s;
+            float lineOffset = 160 - lineH/2;
+
+            // hkk::Rect r(idx*w + w/2, HEIGHT/2, w, height, hkk::Center);
+            // r.fill(sf::Color(brightness, brightness, brightness, 255));
+            // window.draw(r.rect, t);
+
+            // Draw walls with thick lines
+            sw::Line wall;
+                wall.setThickness(w);
+                wall.setPoint(wall.getStartIndex(), {idx*w+418, lineOffset});
+                wall.setPoint(wall.getEndIndex()  , {idx*w+418, lineH+lineOffset});
+                wall.setColor(sf::Color(brightness, brightness, brightness, 255));
+            window.draw(wall);
 
             ++idx;
-            window.draw(r.rect, t);
         } 
         
         // Move dot with mouse
