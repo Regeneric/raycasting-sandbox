@@ -15,17 +15,27 @@ int main() {
 
     std::vector<int> mapGrid {
         1,1,1,1,1,1,1,1,
-        1,0,1,0,0,0,0,1,
-        1,0,1,0,0,0,0,1,
-        1,0,1,0,0,0,0,1,
-        1,0,0,0,0,0,0,1,
-        1,0,0,0,0,1,0,1,
-        1,0,0,0,0,0,0,1,
-        1,1,1,1,1,1,1,1,
+        4,0,1,0,0,0,0,2,
+        4,0,1,0,0,0,0,2,
+        4,0,1,0,0,2,2,2,
+        4,0,0,0,0,0,0,2,
+        4,0,4,0,0,3,0,2,
+        4,0,0,0,0,0,0,2,
+        3,3,3,3,3,3,3,3,
     }; Wall map(8, 8, 64, mapGrid);
+
+    // std::vector<int> mapGrid {
+    //     1,1,1,1,1,1,1,1,
+    //     1,0,1,0,0,0,0,1,
+    //     1,0,1,0,0,0,0,1,
+    //     1,0,1,0,0,1,1,1,
+    //     1,0,0,0,0,0,0,1,
+    //     1,0,1,0,0,1,0,1,
+    //     1,0,0,0,0,0,0,1,
+    //     1,1,1,1,1,1,1,1,
+    // }; Wall map(8, 8, 64, mapGrid);
     
     Player player(sf::Vector2f(WIDTH/2, HEIGHT/2), sf::Vector2f(10.0f, 10.0f), std::nullopt);
-    // Ray ray;
 
 
     while(window.isOpen()) {
@@ -42,7 +52,7 @@ int main() {
         map.draw(&window);
         player.draw(&window);
 
-        // player.look(&map, nullptr);  // Don't draw rays
+        // player.look(&map, nullptr); // Don't draw rays
         player.look(map, &window);     // Draw rays
 
         window.display();

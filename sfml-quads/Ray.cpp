@@ -13,7 +13,7 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
     float rayX = 0.0f, rayY = 0.0f, rayAngle = 0.0f;
     float rayStep = 0.75f;
 
-    int cell = map.cell(), mapW = map.width(), mapH = map.height();
+    int cell = map.cell(), mapW = map.width(), mapH = map.height(), mapTV = 0, mapTH = 0;
     int mapX = 0.0f, mapY = 0.0f, mapPos = 0.0f;
     float offsetX = 0.0f, offsetY = 0.0f;
     std::vector<int> mapGrid = map.grid();
@@ -62,7 +62,8 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             mapY = (int)(rayY)/cell;
             mapPos = mapY * mapW + mapX;
 
-            if((mapPos > 0) && (mapPos < mapW * mapH) && (mapGrid[mapPos] == 1)) {
+            if((mapPos > 0) && (mapPos < mapW * mapH) && (mapGrid[mapPos] > 0)) {
+                mapTH = mapGrid[mapPos];
                 horX = rayX;
                 horY = rayY;
                 distH = hkk::dist(playerX, playerY, horX, horY);
@@ -110,7 +111,8 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             mapY = (int)(rayY)/cell;
             mapPos = mapY * mapW + mapX;
 
-            if((mapPos > 0) && (mapPos < mapW * mapH) && (mapGrid[mapPos] == 1)) {
+            if((mapPos > 0) && (mapPos < mapW * mapH) && (mapGrid[mapPos] > 0)) {
+                mapTV = mapGrid[mapPos];
                 vertX = rayX;
                 vertY = rayY;
                 distV = hkk::dist(playerX, playerY, vertX, vertY);
@@ -135,21 +137,38 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             rayY = vertY;
             dist = distV;
             
-            wallpaint.r = 230;
-            distSqr = (dist*dist);
-            brightness = hkk::map(distSqr, 0.0f, widthSqr, 255.0f, 0.0f);     // Brightness based wall shading
+            // wallpaint.r = 230;
+            // distSqr = (dist*dist);
+            // brightness = hkk::map(distSqr, 0.0f, widthSqr, 255.0f, 0.0f);     // Brightness based wall shading
+        
+            switch(mapTV) {
+                case 1: wallpaint.r = 230; break;
+                case 2: wallpaint.g = 230; break;
+                case 3: wallpaint.b = 230; break;
+                case 4: {wallpaint.r = 230; wallpaint.g = 230;} break;
+                default: break;
+            }
         }
         if(distH < distV) {
             rayX = horX;
             rayY = horY;
             dist = distH;
 
-            wallpaint.r = 179;
-            distSqr = (dist*dist);
-            brightness = hkk::map(distSqr, 0.0f, widthSqr, 230.0f, 0.0f);     // Brightness based wall shading
+            // wallpaint.r = 179;
+            // distSqr = (dist*dist);
+            // brightness = hkk::map(distSqr, 0.0f, widthSqr, 230.0f, 0.0f);     // Brightness based wall shading
+        
+            switch(mapTH) {
+                case 1: wallpaint.r = 179; break;
+                case 2: wallpaint.g = 179; break;
+                case 3: wallpaint.b = 179; break;
+                case 4: {wallpaint.r = 179; wallpaint.g = 179;} break;
+                default: break;
+            }
         }
 
-        if(window != nullptr) window->draw(hkk::Line(playerX, playerY, rayX, rayY).line);
+        // if(window != nullptr) window->draw(hkk::Line(playerX, playerY, rayX, rayY).line);
+        if(window != nullptr) window->draw(sw::Line(sf::Vector2f(playerX, playerY), sf::Vector2f(rayX, rayY), 0.0f, wallpaint));
 
 
         // 3D walls
@@ -180,8 +199,8 @@ void Ray::cast(float f, Player &player, Wall map, sf::RenderWindow *window) {
             wall.setThickness(wallWidth);
             wall.setPoint(wall.getStartIndex(), {r*wallWidth+530, lineOffset});
             wall.setPoint(wall.getEndIndex()  , {r*wallWidth+530, lineH+lineOffset});
-            wall.setColor(sf::Color(brightness, brightness, brightness, 255));
-            // wall.setColor(wallpaint);
+            // wall.setColor(sf::Color(brightness, brightness, brightness, 255));
+            wall.setColor(wallpaint);
         window->draw(wall);
     }
 }

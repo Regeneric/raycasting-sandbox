@@ -14,7 +14,7 @@ void Wall::draw(sf::RenderWindow *window) {
     for(int y = 0; y < _height; y++) {
         for(int x = 0; x < _width; x++) {
             sf::RectangleShape wall;
-            if(_grid[y * _width + x] == 1) wall.setFillColor(sf::Color::Black);
+            if(_grid[y * _width + x] > 0) wall.setFillColor(sf::Color::Black);
             else wall.setFillColor(sf::Color::White);
 
             int xs = x * _cell;

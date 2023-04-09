@@ -102,7 +102,6 @@ namespace hkk {
         }
     };
 
-
     enum RectMode {
         Center,
         Normal

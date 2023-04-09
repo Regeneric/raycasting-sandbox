@@ -7,9 +7,7 @@ public:
     Wall(int w, int h, int c, std::vector<int> m);
     ~Wall() {}
 
-
     void draw(sf::RenderWindow *window);
-
 
     void cell(int c)   {_cell = c;} 
     constexpr int cell()   {return _cell;}

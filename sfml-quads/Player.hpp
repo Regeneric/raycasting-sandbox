@@ -11,6 +11,7 @@
 
 class Player {
 public:
+    Player();
     Player(sf::Vector2f p, sf::Vector2f s, std::optional<float> f);
     Player(sf::Vector2f p, sf::Vector2f s, sf::Color c, std::optional<float> f);
     ~Player() {}
@@ -39,7 +40,7 @@ public:
     void shape(hkk::Shape s) {_shape = s;}
     hkk::Shape shape() {return _shape;}
 
-    float rotation() {return _rotation;}
+    constexpr float rotation() {return _rotation;}
 
 private:
     float _fov;
