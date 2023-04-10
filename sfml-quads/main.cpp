@@ -39,7 +39,7 @@ int main() {
         
         map.draw(&window);
         player.draw(&window);
-        player.look(&map, &window);     // Draw rays
+        player.look(&map, &window);
 
         window.display();
     } return 0;

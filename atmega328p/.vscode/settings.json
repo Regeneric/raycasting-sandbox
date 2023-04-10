@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "lcd.h": "c",
+        "io.h": "c",
+        "delay.h": "c",
+        "optional": "cpp",
+        "cmath": "cpp",
+        "math_utils.h": "c"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
+}
