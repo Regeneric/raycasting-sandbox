@@ -169,12 +169,13 @@ void Ray::cast(float f, Player &player, Wall *map, sf::RenderWindow *window) {
 
         window->draw(sw::Line(sf::Vector2f(playerX, playerY), sf::Vector2f(rayX, rayY), 0.0f, wallpaint));
 
-        // 3D walls
         rayAngle += hkk::radians(rayStep);  // Move one ray radian(rayStep) from another
 
         if(rayAngle < 0)      rayAngle += 2*M_PI;
         if(rayAngle > 2*M_PI) rayAngle -= 2*M_PI;
 
+
+        // 3D walls
         // Removes fish eye effect
         float cellAngle = playerAngle - rayAngle;
         if(cellAngle < 0)       cellAngle += 2*M_PI;
