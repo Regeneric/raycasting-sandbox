@@ -213,8 +213,6 @@ void castRays(float f) {
             }
         }
 
-        LCD.line(playerX, playerY, rayX, rayY);
-
         if(distV < distH) {
             rayX = vertX;
             rayY = vertY;
