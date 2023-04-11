@@ -105,11 +105,7 @@ fn main() {
         if down  {player.advance(-from_angle(radians(player.rotation)), &map);}
         if right {player.rotate( 0.06);}
         if left  {player.rotate(-0.06);}
-
-
-        // TODO
-        // Cast rays
-        // Draw 3D view
+        
 
         // Very similar to C++ function call: `map.draw(&window);`
         map.draw(&mut window);
