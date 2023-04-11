@@ -52,7 +52,6 @@ private:
     float _rotation;
     sf::Vector2f _size;
     sf::Vector2f _position;
-    sf::FloatRect _nextPosition;
 
     hkk::Shape _shape;
 

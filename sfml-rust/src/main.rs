@@ -1,8 +1,8 @@
 // #include "Player.hpp"  -  include project files in C++
-// mod Player;            -  include project files (crates) in Rust
+// mod player;            -  include project files (crates) in Rust
 
 // using namespace hkk;        -  use namespace defined in files (eg. hkk::Player -> Player) in C++
-// use crate::Player::Player;  -  Rust creates namespace for all files, thus  crate::FileName::Struct; 
+// use crate::player::Player;  -  Rust creates namespace for all files, thus  crate::FileName::Struct; 
 
 /*
 Methods visible and available for other files are under  `public:`  in C++
@@ -16,29 +16,41 @@ private:
 
 
 In Rust we can use `pub` keyword
-
 impl Player {
     pub fn player(&self) -> ();
 }
  */
 
-// pub mod Player;          // or we can use `pub` while including modules
-mod player;                 // lowercase to avoid doing  `use crate::Player::Player as OtherPlayer;`
-use crate::player::Player;
+mod player;                     // This is main.rs, so we don't need to `pub mod` this module
+use crate::player::Player;      // Lowercase to avoid doing  `use crate::Player::Player as OtherPlayer;
+    use crate::player::Wall;    // Submodule of module player (player/wall.rs)
+    use crate::player::Ray;     // Submodule of module player (player/ray.rs)
+
+use std::f32::consts::PI;       // For PI constant (f32)
 
 use sfml::{
     // audio::{Sound, SoundBuffer, SoundSource},
-    system::{Vector2f},
+    system::{Vector2f, Clock},
     window::{ContextSettings, Event, Key, Style},
     graphics::{Color, RenderTarget, RenderWindow},
 };
 
+
+// Heading vector from given angle
+fn from_angle(a: f32) -> Vector2f {Vector2f::new(f32::cos(a)/25.0, f32::sin(a)/25.0)}
+
+// Degrees to radians
+fn radians(a: f32) -> f32 {a * (PI/180.0)}
+
+
 fn main() {
-    // Define some constants
-    let width = 800;
-    let height = 600;
+    // `viewport_` slice this window in half, so we can draw two images
+    let width = 1024;
+    let height = 512;
+    let viewport_width = width/2;
 
     // Create the window of the application
+    // It's SFML standard, so pretty much the same as in C++
     let context_settings = ContextSettings {..Default::default()};
     let mut window = RenderWindow::new(
         (width, height),
@@ -50,35 +62,59 @@ fn main() {
     // let mut some_var = 10;   // If not used anywhere, Rust throws error
     // let mut _some_var = 10;  // Rust will ignore that this variable is unused
 
-    let player = Player::new(Vector2f::new((width/2) as f32, (height/2) as f32), Vector2f::new(10.0, 10.0), 60.0);
-    player.set_color();
-
-    // player = player.set_color(Color::YELLOW);
-    // player = player.set_color(Color::GREEN);
-    // player = player.get_color();
+    let mut player = Player::new(Vector2f::new((viewport_width/2) as f32, (height/2) as f32), 
+                                         Vector2f::new(10.0, 10.0), 60.0);
+    let map = Wall::new(64, 8, 8);
 
 
-    // loop - infinite loop untils  break;  or program exit  -  while(window.isOpen()) in C++ to catch that 
+    // Player movement vars
+    let mut up = false;
+    let mut down = false;
+    let mut right = false;
+    let mut left = false;
+
+    let mut clock = Clock::start();  // To calculate delta time
+    // loop - infinite loop until  break;  or program exit  -  while(window.isOpen()) in C++ to catch that 
     loop {
         while let Some(event) = window.poll_event() {
             // swtich(event) {} in C++
             match event {
-                Event::Closed => return,
+                Event::Closed | Event::KeyPressed {code: Key::Escape, ..} => return,
+                
+                // In C++ we've got Keyboard::isKeyPressed(Keyboard::A)
+                // In Rust it's only event based - and events run in their loop
+                // So I just set variable here and move player in main game loop
+                Event::KeyPressed  {code: Key::W, ..} => up = true,
+                Event::KeyReleased {code: Key::W, ..} => up = false,
 
-                Event::KeyPressed {code: Key::Up, ..}    => {/*TODO move player up*/},
-                Event::KeyPressed {code: Key::Down, ..}  => {/*TODO move player down*/},
-                Event::KeyPressed {code: Key::Right, ..} => {/*TODO rotate player right*/},
-                Event::KeyPressed {code: Key::Left, ..}  => {/*TODO rotate player left*/},
+                Event::KeyPressed  {code: Key::S, ..} => down = true,
+                Event::KeyReleased {code: Key::S, ..} => down = false,
+
+                Event::KeyPressed  {code: Key::D, ..} => right = true,
+                Event::KeyReleased {code: Key::D, ..} => right = false,
+
+                Event::KeyPressed  {code: Key::A, ..} => left = true,
+                Event::KeyReleased {code: Key::A, ..} => left = false,
 
                 _ => {}     // `default:` case in C++ `switch`
             }
         } window.clear(Color::rgb(80, 80, 80));
+        // let delta = clock.restart().as_seconds();   // Delta time for movement and animations
+
+        if up    {player.advance( from_angle(radians(player.rotation)), &map);}
+        if down  {player.advance(-from_angle(radians(player.rotation)), &map);}
+        if right {player.rotate( 0.06);}
+        if left  {player.rotate(-0.06);}
+
 
         // TODO
-        // Draw map
-        // Draw player
         // Cast rays
         // Draw 3D view
+
+        // Very similar to C++ function call: `map.draw(&window);`
+        map.draw(&mut window);
+        player.draw(&mut window);
+        player.look(&map, &mut window);
 
         window.display();
     }

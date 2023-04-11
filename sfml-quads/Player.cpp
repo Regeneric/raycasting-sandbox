@@ -1,6 +1,6 @@
 #include "Player.hpp"
 
-Player::Player() : _rotation{0.0f}, _shape{hkk::Square}, _color{sf::Color::Red}, _nextPosition{_player.getGlobalBounds()} {
+Player::Player() : _rotation{0.0f}, _shape{hkk::Square}, _color{sf::Color::Red} {
     _player.setFillColor(_color);
 }
 
