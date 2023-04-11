@@ -152,10 +152,10 @@ void castRays(float f) {
             mapPos = mapY * mapW + mapX;
 
             // Wall hit
-            if(mapPos < mapW*mapH  &&  mapGrid[mapPos] > 0) {
+            if(mapPos > 0  &&  mapPos < mapW*mapH  &&  mapGrid[mapPos] > 0) {
                 horX = rayX;
                 horY = rayY;
-                distH = sdist(playerX, playerY, horY, horX);
+                distH = sdist(playerX, playerY, horX, horY);
 
                 dof = 8;
             } else {
