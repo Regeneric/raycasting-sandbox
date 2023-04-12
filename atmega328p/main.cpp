@@ -12,7 +12,7 @@
 #include "lcd.h"
 #include "math_utils.h"
 
-#include <cmath>
+#include <math.h>
 
 
 #define BACK_BTN    (1<<PD5)
@@ -24,6 +24,16 @@
 #define FWD_INT_BTN (1<<PCINT22)
 #define RT_INT_BTN  (1<<PCINT23)
 #define LT_INT_BTN  (1<<PCINT0)
+
+
+// constexpr int16_t iminus = toFixed<8>(-1.0f/0.64836082745);
+// constexpr int16_t fminus = toFloat<8>(-395);
+// (int32_t(-1) << 8) / int32_t(0.64836082745);
+
+// constexpr int16_t tng = toFixed<8>(tan(ra));
+// constexpr int16_t iminus = (int32_t(-1) << 8) / int32_t(tng);
+
+// constexpr float at = -1/0.64836082745;
 
 
 
@@ -38,32 +48,36 @@ constexpr float toFloat(int16_t d) {
 }
 
 
+#undef M_PI
+#undef M_PI_2  // I confused myself with my variable names so many times...
 
+constexpr int16_t RT      = toFixed<8>(0.05);
 constexpr int16_t DR      = toFixed<8>(0.0174533);
-constexpr int16_t PI      = toFixed<8>(M_PI);
-constexpr int16_t PI_2    = toFixed<8>(2*M_PI);
-constexpr int16_t PI_F2   = toFixed<8>(M_2_PI);
-constexpr int16_t PI_3_F2 = toFixed<8>(3*M_2_PI);
+constexpr int16_t M_PI    = toFixed<8>(3.14159265358979323846);     
+constexpr int16_t M_PI_2  = toFixed<8>(1.57079632679489661923);
+constexpr int16_t M_2PI   = toFixed<8>(2*3.14159265358979323846);
+constexpr int16_t M_3PI_2 = toFixed<8>(3*1.57079632679489661923);
 
 
 struct Player {
-    int16_t x = toFixed<8>(13.0f); 
+    int16_t x = toFixed<8>(70.0f); 
     int16_t y = toFixed<8>(13.0f); 
     
-    const uint8_t size  = 2; 
-    const uint8_t speed = 1;
+    const static uint8_t size  = 2; 
+    const static uint8_t speed = 1;
 
-    int16_t angle = toFixed<8>(260.0f); 
-    int16_t dx = toFixed<8>(cos(angle)*5.0f); 
-    int16_t dy = toFixed<8>(sin(angle)*5.0f);
+    const float fangle = 90.0f;
+    int16_t angle = toFixed<8>(fangle); 
+    int16_t dx = toFixed<8>(cos(fangle)*5.0f); 
+    int16_t dy = toFixed<8>(sin(fangle)*5.0f);
 }; Player player;
 
 struct MapConfig {
-    const uint8_t mapX = 12; 
-    const uint8_t mapY = 8;
-    const uint8_t cell = 8;
+    const static uint8_t mapX = 12; 
+    const static uint8_t mapY = 8;
+    const static uint8_t cell = 8;
 
-    uint8_t map[12*8] = {
+    uint8_t map[mapX*mapY] = {
         1,1,1,1,1,1,1,1,1,1,1,1,
         1,0,0,0,0,1,0,0,0,0,1,1,
         1,0,0,0,0,0,0,0,0,1,1,1,
@@ -95,12 +109,12 @@ void drawMap() {
 }
 
 // constexpr float sdist(float x1, float y1, float x2, float y2) {return std::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));}
-int16_t sdist(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {return sqrt((x2-x1)*(x2-x1)  +  (y2-y1)*(y2-y1));}
+int16_t sdist(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {return sqrt(((x2-x1)*(x2-x1))  +  ((y2-y1)*(y2-y1)));}
 
 void castRays() {
     uint8_t dof = 0; 
     int16_t rayX = 0, rayY = 0, rayAngle = 0;
-    constexpr uint8_t fov = 60;
+    constexpr uint8_t fov = 30;
 
     constexpr uint8_t cell = mapConfig.cell, mapW = mapConfig.mapX, mapH = mapConfig.mapY;
     uint8_t mapX = 0, mapY = 0;
@@ -109,7 +123,7 @@ void castRays() {
 
     int16_t playerX = player.x;
     int16_t playerY = player.y;
-    int16_t playerAngle = player.angle - toFixed<8>((fov/2));
+    int16_t playerAngle = player.angle;
 
     constexpr int16_t rounding = 9;     // Magic number  -  comes from int32_t(0.00015f * float(1<<16));
 
@@ -126,8 +140,8 @@ void castRays() {
 
     // Ray angle in radians
     rayAngle = playerAngle;
-    if(rayAngle < 0)    rayAngle += PI_2;
-    if(rayAngle > PI_2) rayAngle -= PI_2;
+    if(rayAngle < 0)     rayAngle += M_2PI;
+    if(rayAngle > M_2PI) rayAngle -= M_2PI;
     
     cli();
     for(uint8_t r = 0; r < fov; r++) {
@@ -136,9 +150,10 @@ void castRays() {
         int16_t horX = playerX, horY = playerY;
 
         dof = 0;
-        int16_t aTan = toFixed<8>(-1/tan(rayAngle));
+        int16_t tng = toFixed<8>(tan(toFloat<8>(rayAngle)));
+        int16_t aTan = (int32_t(-1) << 8) / int32_t(tng);
 
-        if(rayAngle > PI) {
+        if(rayAngle > M_PI) {
             int16_t pd = (int32_t(playerY) << 8) / int32_t(cell);  // pd = playerY / cell
             int16_t pm = (int32_t(pd) * int32_t(cell)) >> 8;       // pm = pd * cell
 
@@ -148,7 +163,7 @@ void castRays() {
             offsetY = -cell;
             offsetX = -offsetY * aTan;
         }
-        if(rayAngle < PI) {
+        if(rayAngle < M_PI) {
             int16_t pd = (int32_t(playerY) << 8) / int32_t(cell);  // pd = playerY / cell
             int16_t pm = (int32_t(pm) * int32_t(cell)) >> 8;       // pm = pd * cell
 
@@ -158,7 +173,7 @@ void castRays() {
             offsetY = cell;
             offsetX = -offsetY*aTan;
         }
-        if(rayAngle == 0 || rayAngle == PI) {
+        if(rayAngle == 0 || rayAngle == M_PI) {
             rayX = playerX;
             rayY = playerY;
             dof = 8;
@@ -190,10 +205,10 @@ void castRays() {
         int16_t vertX = playerX, vertY = playerY;
 
         dof = 0;
-        int16_t nTan = toFixed<8>(-tan(rayAngle));
+        int16_t nTan = -toFixed<8>(tan(toFloat<8>(rayAngle)));
 
 
-        if(rayAngle > PI_F2 && rayAngle < PI_3_F2) {
+        if(rayAngle > M_PI_2 && rayAngle < M_3PI_2) {
             int16_t pd = (int32_t(playerX) << 8) / int32_t(cell);  // pd = playerX / cell
             int16_t pm = (int32_t(pd) * int32_t(cell)) >> 8;       // pm = pd * cell
 
@@ -203,7 +218,7 @@ void castRays() {
             offsetX = -cell;
             offsetY = -offsetX*nTan;
         }
-        if(rayAngle < PI_2 || rayAngle > PI_3_F2) {
+        if(rayAngle < M_PI_2 || rayAngle > M_3PI_2) {
             int16_t pd = (int32_t(playerX) << 8) / int32_t(cell);  // pd = playerX / cell
             int16_t pm = (int32_t(pd) * int32_t(cell)) >> 8;       // pm = pd * cell
 
@@ -213,7 +228,7 @@ void castRays() {
             offsetX =  cell;
             offsetY = -offsetX*nTan;
         }
-        if(rayAngle == 0 || rayAngle == PI) {
+        if(rayAngle == 0 || rayAngle == M_PI) {
             rayX = playerX;
             rayY = playerY;
             dof = 8;
@@ -255,8 +270,8 @@ void castRays() {
         LCD.line(lpX, lpY, rpX, rpY);
         
         rayAngle += DR*3;
-        if(rayAngle < 0)    rayAngle += PI_2;
-        if(rayAngle > PI_2) rayAngle -= PI_2;
+        if(rayAngle < 0)    rayAngle += M_2PI;
+        if(rayAngle > M_2PI) rayAngle -= M_2PI;
     }
 
     sei();
@@ -304,10 +319,10 @@ ISR(PCINT0_vect) {
     if(!(PINB & LEFT_BTN)) {
         // Low state on LEFT_BTN
 
-        player.angle -= toFixed<8>(0.05);
-        if(player.angle < 0) player.angle += PI_2;
-        player.dx = toFixed<8>(cos(player.angle)*5);
-        player.dy = toFixed<8>(sin(player.angle)*5);
+        player.angle -= RT;
+        if(player.angle < 0) player.angle += M_2PI;
+        player.dx = toFixed<8>(cos(toFloat<8>(player.angle))*5);
+        player.dy = toFixed<8>(sin(toFloat<8>(player.angle))*5);
 
         // player.angle -= 0.05;
         // if(player.angle < 0) player.angle += 2*M_PI;
@@ -337,10 +352,10 @@ ISR(PCINT2_vect) {
         // Low state on RIGHT_BTN
         // player.x += player.speed;
 
-        player.angle += toFixed<8>(0.05);
-        if(player.angle > PI_2) player.angle -= PI_2;
-        player.dx = toFixed<8>(cos(player.angle)*5);
-        player.dy = toFixed<8>(sin(player.angle)*5);
+        player.angle += RT;
+        if(player.angle > M_2PI) player.angle -= M_2PI;
+        player.dx = toFixed<8>(cos(toFloat<8>(player.angle))*5);
+        player.dy = toFixed<8>(sin(toFloat<8>(player.angle))*5);
 
         // player.angle += 0.05;
         // if(player.angle > 2*M_PI) player.angle -= 2*M_PI;

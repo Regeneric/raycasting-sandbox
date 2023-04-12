@@ -3,7 +3,7 @@ PROGM = usbasp
 PROGM_UC = m328p
 
 CC = avr-g++
-CFLAGS = -fshort-enums -ffunction-sections -funsigned-char -lm -lstdc++ -I /home/hkk/Documents/cpp/raycasting/atmega328p/avr-libstdcpp/include -Os -w -ffreestanding -DF_CPU=20000000UL -mmcu=$(TARGET) -fno-rtti
+CFLAGS = -fshort-enums -ffunction-sections -funsigned-char -lm -lstdc++ -Os -w -ffreestanding -DF_CPU=20000000UL -mmcu=$(TARGET) -fno-rtti
 
 all: main.o lcd.o app ./build/app.bin
 	avr-objcopy -O ihex -R .eeprom ./build/app.bin ./rel/app.hex
