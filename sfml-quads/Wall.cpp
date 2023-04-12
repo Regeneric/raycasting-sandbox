@@ -10,7 +10,7 @@ Wall::Wall(int w, int h, int c, std::vector<int> m) {
 }
 
 
-void Wall::draw(sf::RenderWindow *window) {
+void Wall::draw(std::shared_ptr<sf::RenderWindow> window) {
     for(int y = 0; y < _height; y++) {
         for(int x = 0; x < _width; x++) {
             sf::RectangleShape wall;

@@ -6,8 +6,8 @@
 #include "Wall.hpp"
 #include "Ray.hpp"
 
-#include <any>
 #include <optional>
+#include <memory>
 
 class Player {
 public:
@@ -21,11 +21,11 @@ public:
     constexpr float fov() {return _fov;}
 
     void rotate(float a);
-    void move(float a, Wall *map);
-    void move(sf::Vector2f p, Wall *map);
+    void move(float a, std::shared_ptr<Wall> map);
+    void move(sf::Vector2f p, std::shared_ptr<Wall> map);
 
-    void draw(sf::RenderWindow *window) {window->draw(_player);};
-    void look(Wall *map, sf::RenderWindow *window);
+    void draw(std::shared_ptr<sf::RenderWindow> window) {window->draw(_player);};
+    void look(std::shared_ptr<Wall> map, std::shared_ptr<sf::RenderWindow> window) {_ray.cast(_fov, *this, map, window);}
 
 
     void color(sf::Color c) {_color = c;}
@@ -37,23 +37,17 @@ public:
     void position(sf::Vector2f p) {_position = p;}
     sf::Vector2f position() {return _player.getPosition();}
 
-    void shape(hkk::Shape s) {_shape = s;}
-    hkk::Shape shape() {return _shape;}
-
     constexpr float rotation() {return _rotation;}
 
 private:
     float _fov;
     sf::RectangleShape _player;
-    // sf::CircleShape _player;
 
     sf::Color _color;
 
     float _rotation;
     sf::Vector2f _size;
     sf::Vector2f _position;
-
-    hkk::Shape _shape;
 
     Ray _ray;
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Wall.hpp"
 
 class Player;
@@ -8,5 +10,5 @@ public:
     Ray() {}
     ~Ray() {}
 
-    void cast(float f, Player &player, Wall *wall, sf::RenderWindow *window);
+    void cast(float f, Player &player, std::shared_ptr<Wall> wall, std::shared_ptr<sf::RenderWindow> window);
 };

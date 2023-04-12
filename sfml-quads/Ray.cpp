@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-void Ray::cast(float f, Player &player, Wall *map, sf::RenderWindow *window) {
+void Ray::cast(float f, Player &player, std::shared_ptr<Wall> map, std::shared_ptr<sf::RenderWindow> window) {
     float dist = 0.0f;
 
     int dof = 0, fov = f;
