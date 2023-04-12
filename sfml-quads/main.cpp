@@ -9,8 +9,8 @@
 #include <memory>
 
 int main() {
-    std::shared_ptr<sf::RenderWindow> window 
-        = std::make_unique<sf::RenderWindow>(sf::VideoMode(1024, HEIGHT), "Ray Casting", sf::Style::Close);
+    std::shared_ptr<sf::RenderWindow> window =
+        std::make_unique<sf::RenderWindow>(sf::VideoMode(1024, HEIGHT), "Ray Casting", sf::Style::Close);
         window->setView(sf::View(sf::FloatRect(0, 0, 1024, HEIGHT)));
 
 

@@ -1,2 +1,7 @@
 sfml-rust/target/debug
 .vscode/
+*.o
+*.out
+app
+build/
+rel/
