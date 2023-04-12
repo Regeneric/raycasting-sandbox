@@ -12,4 +12,4 @@ My goal is to undesrtand basics behind those algorithms and then try to write so
 So here's this little sandbox. Mainly coded in C and C++ but I tried myself with Fortran (don't ask me why...) and Rust (that was actually fun!). I did some coding for AVR and ARM too.    
 I used ncurses, SFML, my own OLED and LCD drivers to draw on screen, the next is SDL (I wanna try to write good C code for PC - I am ARM dev / Yocto Engineer on normal days).  
   
-So that's it. My little, fun side gig when I try to understand how did idSoftware wrote Wolfenstein 3D for 12 MHz 80286 :)  
+So that's it. My little, fun side gig where I try to understand how did idSoftware write Wolfenstein 3D for 12 MHz 80286 :)  
