@@ -41,7 +41,7 @@
 #define max(a,b)   (((a) > (b)) ? (a) : (b))
 
 // #define swap(x, y) do {typeof(x) swap = x; x = y; y = swap;} while(0)
-void swap(uint8_t *a, uint8_t *b) {
+constexpr void swap(int16_t *a, int16_t *b) {
 	(*a) = (*a)+(*b);
 	(*b) = (*a)-(*b);
 	(*a) = (*a)-(*b);
