@@ -66,11 +66,11 @@ impl<'a> Player<'a> {
         let mut player_y = self.player.position().y;
 
 
-        let mut offset_x = 0;
+        let offset_x: i32;
         if self.position.x < 0.0 {offset_x = -1 * dist_from_wall as i32;}
         else {offset_x = dist_from_wall as i32;}
 
-        let mut offset_y = 0;
+        let offset_y: i32;
         if self.position.y < 0.0 {offset_y = -1 * dist_from_wall as i32;}
         else {offset_y = dist_from_wall as i32;}
 

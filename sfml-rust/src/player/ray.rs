@@ -16,12 +16,12 @@ impl Ray {
     pub fn cast(f: f32, player: &Player, map: &Wall, window: &mut RenderWindow) {
         let mut dist = 0.0;      // Shortest distance to wall
 
-        let mut dof = 0;         // Deepth of field
-        let fov = f;         // Field of view
+        let mut dof: i32;             // Deepth of field
+        let fov = f;             // Field of view
 
         let mut ray_x = 0.0;     // Ray X position
         let mut ray_y = 0.0;     // Ray Y position
-        let mut ray_ang = 0.0;   // Ray angle
+        let mut ray_ang: f32;         // Ray angle
 
         let cell = map.cell;     // Cell size
         let map_w = map.width;   // Map width
@@ -29,13 +29,13 @@ impl Ray {
         let mut map_tv = 0;      // Cell type on vertical axis (0, 1, 2, 3 etc.)
         let mut map_th = 0;      // Cell type on horizontal axis (0, 1, 2, 3 etc.)
         
-        let mut map_x = 0;       // On what cell, on X axis, player is standing
-        let mut map_y = 0;       // On what cell, on Y asix, player is standing
-        let mut map_pos = 0;     // Index for map array
+        let mut map_x: i32;           // On what cell, on X axis, player is standing
+        let mut map_y: i32;           // On what cell, on Y asix, player is standing
+        let mut map_pos: i32;         // Index for map array
 
-        let mut offset_x = 0.0;   // Ray offset on X axis
-        let mut offset_y = 0.0;   // Ray offset on Y axis
-        let grid = &map.grid; // Our map
+        let mut offset_x = 0.0;      // Ray offset on X axis
+        let mut offset_y = 0.0;      // Ray offset on Y axis
+        let grid = &map.grid;  // Our map
 
         let player_x = player.player.position().x;  // Player position on X axis in general
         let player_y = player.player.position().y;  // Player position on Y axis in general
@@ -166,10 +166,9 @@ impl Ray {
 
             // Distance based shading for 3D walls and colouring based on cell type
             let mut wallpaint = Color::rgb(0, 0, 0);
-            let mut dist_sqr: f32;
-            let mut brightness = 127.0;
+            let brightness: f32;
             let width_sqr = (512*512) as f32;     // Magic number - screen is 1024, but we're drawing only on the half of it 
-        
+            let dist_sqr: f32;
 
             // We only want to draw shortes ray from dist_v and dist_h
             if dist_v < dist_h {
@@ -180,34 +179,33 @@ impl Ray {
 
                 dist_sqr = dist*dist;
                 brightness = Self::map(dist_sqr, 0.0, width_sqr, 255.0, 0.0);
-            
+
                 // Shading and slightly different from horizontal walls color
                 match map_tv {
                     1 => {wallpaint.r = brightness as u8;},
                     2 => {wallpaint.g = brightness as u8;},
                     3 => {wallpaint.b = brightness as u8;},
                     4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
-                    _ => wallpaint.r = 239,
+                    _ => {wallpaint = Color::BLACK;},
                 }
-            }
-            if dist_h < dist_v {
+            } else if dist_h < dist_v {
                 ray_x = hor_x;
                 ray_y = hor_y;
                 dist = dist_h;
 
                 dist_sqr = dist*dist;
-                brightness = Self::map(dist_sqr, 0.0, width_sqr, 255.0, 0.0);
+                brightness = Self::map(dist_sqr, 0.0, width_sqr, 230.0, 0.0);
             
                 match map_th {
                     1 => {wallpaint.r = brightness as u8;},
                     2 => {wallpaint.g = brightness as u8;},
                     3 => {wallpaint.b = brightness as u8;},
                     4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
-                    _ => wallpaint.r = 173,
+                    _ => {wallpaint = Color::BLACK;},
                 }
-            }
+            } else {brightness = 127.0; wallpaint.b = brightness as u8;}
 
-            let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, Color::RED);
+            let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, wallpaint);
             ray.draw(window);
             
             ray_ang = ray_ang + radians(1.0);   // Magic number - offset each ray by 1 degree
@@ -225,12 +223,12 @@ impl Ray {
 
             let line_h = (cell*400) as f32 / dist;   // Walls height - can be regulated
 
-            // Without this guad u8 will overflow
-            if brightness <= 0.0   {brightness = 0.0;}
-            if brightness >= 255.0 {brightness = 255.0;}
+            // // Without this guard u8 will overflow       -  this is true for C++, in Rust I've got no artifacts
+            // if brightness < 0.0   {brightness = 0.0;}
+            // if brightness > 255.0 {brightness = 255.0;}
 
             let wall_width = 512/cell;              // Magic number - 512 is viewport size  -  space taken on the screen
-            let line_offset = 240.0 - line_h/2.0;   // Camera height
+            let line_offset = 240.0 - line_h/2.0;   // Magic number - 240 is camera height
         
             let wall = WideLine::new(Vector2f::new((r*wall_width) as f32 + 530.0, line_offset), Vector2f::new((r*wall_width) as f32 + 530.0, line_h+line_offset), wall_width as f32, wallpaint);
             wall.draw(window);

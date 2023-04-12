@@ -1,9 +1,9 @@
-use sfml::{graphics::{Vertex, Color, RenderWindow, RenderTarget, RenderStates, VertexBuffer, PrimitiveType, VertexBufferUsage}, system::{Vector2f}};
+use sfml::{graphics::{Vertex, Color, RenderWindow, RenderTarget, VertexBuffer, PrimitiveType, VertexBufferUsage}, system::{Vector2f}};
 
 pub struct WideLine {
     verticies: VertexBuffer,
-    thicnkess: f32,
-    color: Color
+    _thicnkess: f32,
+    _color: Color
 }
 impl WideLine {
     pub fn new(p1: Vector2f, p2: Vector2f, t: f32, c: Color) -> Self {
@@ -27,8 +27,8 @@ impl WideLine {
         vert_buf.update(&verts, 0);
         WideLine {
             verticies: vert_buf, 
-            thicnkess: t, 
-            color: c 
+            _thicnkess: t, 
+            _color: c 
         }
     }
 
@@ -41,4 +41,8 @@ impl WideLine {
     pub fn draw(&self, window: &mut RenderWindow) -> () {
         window.draw(&self.verticies);
     }
+
+    // I think I need methods to do this here - it's a GPU VertexBuffer that needs to be modified
+    // pub fn color() {}
+    // pub fn size() {}
 }

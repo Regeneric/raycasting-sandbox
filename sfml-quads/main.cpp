@@ -20,7 +20,7 @@ int main() {
         4,0,0,0,0,0,0,2,
         4,0,4,0,0,3,0,2,
         4,0,0,0,0,0,0,2,
-        3,3,3,3,3,3,3,3,
+        3,3,3,3,3,3,3,3, 
     }; Wall map(8, 8, 64, mapGrid);
 
     Player player(sf::Vector2f(WIDTH/2, HEIGHT/2), sf::Vector2f(10.0f, 10.0f), std::nullopt);

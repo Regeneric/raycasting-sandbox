@@ -24,13 +24,13 @@ impl Player {
 mod player;                     // This is main.rs, so we don't need to `pub mod` this module
 use crate::player::Player;      // Lowercase to avoid doing  `use crate::Player::Player as OtherPlayer;
     use crate::player::Wall;    // Submodule of module player (player/wall.rs)
-    use crate::player::Ray;     // Submodule of module player (player/ray.rs)
+//    use crate::player::Ray;   // Submodule of module player (player/ray.rs)
 
 use std::f32::consts::PI;       // For PI constant (f32)
 
 use sfml::{
     // audio::{Sound, SoundBuffer, SoundSource},
-    system::{Vector2f, Clock},
+    system::{Vector2f},
     window::{ContextSettings, Event, Key, Style},
     graphics::{Color, RenderTarget, RenderWindow},
 };
@@ -73,7 +73,7 @@ fn main() {
     let mut right = false;
     let mut left = false;
 
-    let mut clock = Clock::start();  // To calculate delta time
+    // let clock = Clock::start();  // To calculate delta time
     // loop - infinite loop until  break;  or program exit  -  while(window.isOpen()) in C++ to catch that 
     loop {
         while let Some(event) = window.poll_event() {
