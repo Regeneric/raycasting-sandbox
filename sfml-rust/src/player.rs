@@ -12,6 +12,7 @@ pub mod ray;                        // Same goes for ray
 pub use crate::player::ray::Ray;
 
 mod wline;   
+mod pixel;
 
 use sfml::{
     graphics::{RectangleShape, Color, Transformable, RenderWindow, RenderTarget, Shape},

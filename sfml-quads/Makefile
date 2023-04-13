@@ -26,6 +26,9 @@ ray: Ray.cpp
 wall: Wall.cpp
 	$(CC) -c Wall.cpp $(CFLAGS)
 
+pixel: Pixel.cpp
+	$(CC) -c Pixle.cpp $(CFLAGS)
+
 line: SelbaWard/Line.cpp
 	$(CC) -c SelbaWard/Line.cpp $(CFLAGS)
 

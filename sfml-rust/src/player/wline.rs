@@ -1,7 +1,7 @@
 use sfml::{graphics::{Vertex, Color, RenderWindow, RenderTarget, VertexBuffer, PrimitiveType, VertexBufferUsage}, system::{Vector2f}};
 
 pub struct WideLine {
-    verticies: VertexBuffer,
+    pub verticies: VertexBuffer,
     _thicnkess: f32,
     _color: Color
 }

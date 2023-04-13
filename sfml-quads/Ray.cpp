@@ -1,6 +1,7 @@
 #include "commons.hpp"
 #include "Ray.hpp"
 #include "Player.hpp"
+#include "Pixel.hpp"
 
 #include "SelbaWard/Line.hpp"
 
@@ -201,5 +202,4 @@ void Ray::cast(float f, Player &player, std::shared_ptr<Wall> map, std::shared_p
             // wall.setColor(sf::Color(brightness, brightness, brightness, 255));
             wall.setColor(wallpaint);
         window->draw(wall);
-    }
 }

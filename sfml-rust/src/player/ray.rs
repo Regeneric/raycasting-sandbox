@@ -233,8 +233,6 @@ impl Ray {
             let wall = WideLine::new(Vector2f::new((r*wall_width) as f32 + 530.0, line_offset), Vector2f::new((r*wall_width) as f32 + 530.0, line_h+line_offset), wall_width as f32, wallpaint);
             wall.draw(window);
         }
-
-
     }
 
     // Distance between two points
