@@ -9,6 +9,9 @@
 static constexpr int WIDTH  = 512;
 static constexpr int HEIGHT = 512;
 
+// static constexpr int WIDTH  = 720;
+// static constexpr int HEIGHT = 720;
+
 namespace hkk {
     enum Shape {
         Circle,
@@ -67,6 +70,9 @@ namespace hkk {
 
     // Get angle from unit vector
     static inline double heading(sf::Vector2f vec) {return atan2(vec.y, vec.x);}
+
+    // Clockwise, perpendicular vector to oter vector
+    static inline sf::Vector2f perpendicular(sf::Vector2f fromVector) {return sf::Vector2f(-fromVector.y, fromVector.x);}
 
 
     struct Line {

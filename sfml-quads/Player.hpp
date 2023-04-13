@@ -37,11 +37,13 @@ public:
     void position(sf::Vector2f p) {_position = p;}
     sf::Vector2f position() {return _player.getPosition();}
 
-    constexpr float rotation() {return _rotation;}
+    // constexpr float rotation() {return _rotation;}
+    float rotation() {return _player.getRotation();}
 
+    sf::RectangleShape _player;
 private:
     float _fov;
-    sf::RectangleShape _player;
+    // sf::RectangleShape _player;
 
     sf::Color _color;
 

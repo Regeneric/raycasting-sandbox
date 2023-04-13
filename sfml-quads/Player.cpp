@@ -33,8 +33,8 @@ void Player::rotate(float a) {
     _player.rotate(a);
 }
 
+#include <iostream>
 void Player::move(sf::Vector2f p, std::shared_ptr<Wall> map) {
-    _position = p;
     std::vector<int> grid = map->grid();
 
     // Collision detecion with sliding
@@ -42,12 +42,14 @@ void Player::move(sf::Vector2f p, std::shared_ptr<Wall> map) {
     float playerX = _player.getPosition().x;
     float playerY = _player.getPosition().y;
 
+    // std::cout << "MPX: " << playerX << " ; MPY: " << playerY << std::endl;
+
     int offsetX = 0;
-    if(_position.x < 0) offsetX = -distFromWall;
+    if(p.x < 0) offsetX = -distFromWall;
     else offsetX = distFromWall;
 
     int offsetY = 0;
-    if(_position.y < 0) offsetY = -distFromWall;
+    if(p.y < 0) offsetY = -distFromWall;
     else offsetY = distFromWall;
 
     int gridPosX = playerX/map->cell();
@@ -57,8 +59,10 @@ void Player::move(sf::Vector2f p, std::shared_ptr<Wall> map) {
     int gridPosOffYAdd = (playerY + offsetY)/map->cell();
 
 
-    if(grid[gridPosY * map->width()        + gridPosOffXAdd] == 0) {playerX += _position.x; _player.setPosition(playerX, playerY);}
-    if(grid[gridPosOffYAdd * map->width()  + gridPosX]       == 0) {playerY += _position.y; _player.setPosition(playerX, playerY);}
+    if(grid[gridPosY * map->width()        + gridPosOffXAdd] == 0) {playerX += p.x; _player.setPosition(playerX, playerY);}
+    if(grid[gridPosOffYAdd * map->width()  + gridPosX]       == 0) {playerY += p.y; _player.setPosition(playerX, playerY);}
+
+     _position = _player.getPosition();
 }
 void Player::move(float a, std::shared_ptr<Wall> map) {
     // sf::Vector2f fa = hkk::fromAngle(hkk::radians(a));

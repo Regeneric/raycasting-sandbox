@@ -5,8 +5,40 @@
 #include "SelbaWard/Line.hpp"
 
 #include <iostream>
+#include <cmath>
+#include <vector>
+
 
 void Ray::cast(float f, Player &player, std::shared_ptr<Wall> map, std::shared_ptr<sf::RenderWindow> window) {
+    static constexpr int texWidth = 64;
+    static constexpr int texHeight = 64;
+   
+    int buffer[WIDTH][HEIGHT]; // y-coordinate first because it works per scanline
+    std::vector<int> texture[8];
+    for(int i = 0; i < 8; i++) texture[i].resize(texWidth * texHeight);
+
+    for(int x = 0; x < texWidth; x++)
+    for(int y = 0; y < texHeight; y++) {
+        int xorcolor = (x * 256 / texWidth) ^ (y * 256 / texHeight);
+        //int xcolor = x * 256 / texWidth;
+        int ycolor = y * 256 / texHeight;
+        int xycolor = y * 128 / texHeight + x * 128 / texWidth;
+        texture[0][texWidth * y + x] = 65536 * 254 * (x != y && x != texWidth - y); //flat red texture with black cross
+        texture[1][texWidth * y + x] = xycolor + 256 * xycolor + 65536 * xycolor; //sloped greyscale
+        texture[2][texWidth * y + x] = 256 * xycolor + 65536 * xycolor; //sloped yellow gradient
+        texture[3][texWidth * y + x] = xorcolor + 256 * xorcolor + 65536 * xorcolor; //xor greyscale
+        texture[4][texWidth * y + x] = 256 * xorcolor; //xor green
+        texture[5][texWidth * y + x] = 65536 * 192 * (x % 16 && y % 16); //red bricks
+        texture[6][texWidth * y + x] = 65536 * ycolor; //red gradient
+        texture[7][texWidth * y + x] = 128 + 256 * 128 + 65536 * 128; //flat grey texture
+    }
+
+
+
+
+
+
+
     float dist = 0.0f;
 
     int dof = 0, fov = f;
@@ -194,12 +226,151 @@ void Ray::cast(float f, Player &player, std::shared_ptr<Wall> map, std::shared_p
         float lineOffset = 240 - lineH/2;
 
         // Draw walls with thick lines
+        sf::Texture wallTex;
+            wallTex.loadFromFile("test_pattern1.bmp");
+
         sw::Line wall;
             wall.setThickness(wallWidth);
             wall.setPoint(wall.getStartIndex(), {r*wallWidth+530, lineOffset});
             wall.setPoint(wall.getEndIndex()  , {r*wallWidth+530, lineH+lineOffset});
             // wall.setColor(sf::Color(brightness, brightness, brightness, 255));
             wall.setColor(wallpaint);
+            wall.setTexture(wallTex);
         window->draw(wall);
     }
 }
+
+
+
+
+
+
+
+
+
+    // const int mapWidth = 24;
+    // const int mapHeight = 24;
+
+    // int worldMap[mapWidth][mapHeight]= {
+    //     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1},
+    //     {1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,3,0,0,0,1},
+    //     {1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,0,0,0,0,5,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    //     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    // };
+
+    // sf::Vector2f playerPos = player._player.getPosition();
+    // float posX = playerPos.x;
+    // float posY = playerPos.y;
+
+    // float dirX = hkk::fromAngle(hkk::radians(player.rotation())).x;
+    // float dirY = hkk::fromAngle(hkk::radians(player.rotation())).y;
+
+    // float planeX = hkk::perpendicular(playerPos).x;
+    // float planeY = hkk::perpendicular(playerPos).y - 0.34;
+
+    // for(int x = 0; x < WIDTH; x++) {
+    //     float cameraX = 2*x / float(WIDTH) - 1;
+    //     float rayDirX = dirX + planeX * cameraX;
+    //     float rayDirY = dirY + planeY * cameraX;
+
+    //     // int mapX = int(posX)/30;
+    //     // int mapY = int(posY)/30;
+    //     // int mapPos = mapY * mapWidth + mapX;
+
+    //     int mapX = int(posX/30);
+    //     int mapY = int(posY/30);
+
+    //     float sideDistX;
+    //     float sideDistY;
+
+    //     float deltaDistX = (rayDirX == 0) ? INFINITY : std::abs(1/rayDirX);
+    //     float deltaDistY = (rayDirY == 0) ? INFINITY : std::abs(1/rayDirY);
+    //     float perpWallDist;
+
+    //     int stepX;
+    //     int stepY;
+
+    //     int hit = 0;
+    //     int side;
+
+    //     if(rayDirX < 0) {stepX = -1; sideDistX = (posX - mapX) * deltaDistX;}
+    //     else {stepX = 1; sideDistX = (mapX +1.0 - posX) * deltaDistX;}
+
+    //     if(rayDirY < 0) {stepY = -1; sideDistY = (posY - mapY) * deltaDistY;}
+    //     else {stepY = 1; sideDistY = (mapY + 1.0 - posY) * deltaDistY;}
+        
+    //     while(hit == 0) {
+    //         if(sideDistX < sideDistY) {
+    //             sideDistX += deltaDistX;
+    //             mapX += stepX;
+    //             side = 0;
+    //         } else {
+    //             sideDistY += deltaDistY;
+    //             mapY += stepY;
+    //             side = 1;
+    //         }
+
+    //         if(worldMap[mapX][mapY] > 0) hit = 1;
+    //     }
+
+    //     // Calculating distance from camera plane - no need to "fisheye" correction
+    //     if(side == 0) perpWallDist = (sideDistX - deltaDistX);
+    //     else          perpWallDist = (sideDistY - deltaDistY);
+
+    //     int lineHeight = (int)(HEIGHT / perpWallDist);
+        
+    //     int drawStart = -lineHeight / 2+HEIGHT / 2;
+    //     if(drawStart < 0) drawStart = 0;
+
+    //     int drawEnd = lineHeight / 2+HEIGHT / 2;
+    //     if(drawEnd >= HEIGHT) drawEnd = HEIGHT-1;
+
+    //     sf::Color wallpaint;
+    //     switch(worldMap[mapX][mapY]) {
+    //         case 1:  wallpaint = sf::Color::Red;    break;
+    //         case 2:  wallpaint = sf::Color::Green;  break;
+    //         case 3:  wallpaint = sf::Color::Blue;   break;
+    //         case 4:  wallpaint = sf::Color::White;  break;
+    //         default: wallpaint = sf::Color::Yellow; break;
+    //     }
+
+    //     if(side == 1) {
+    //         wallpaint.r /= 2;
+    //         wallpaint.g /= 2;
+    //         wallpaint.b /= 2;
+    //     }
+
+    //     sw::Line wall;
+    //         wall.setThickness(0.0f);
+    //         wall.setPoint(wall.getStartIndex(), {x, drawStart});
+    //         wall.setPoint(wall.getEndIndex()  , {x, drawEnd});
+    //         wall.setColor(wallpaint);
+    //     window->draw(wall);
+    // }
+
+
+    // std::cout << "PLX: " << playerX << " ; PLY: " << planeY << std::endl;
+    // std::cout << "DRX: " << dirX << " ; DRY: " << dirY << std::endl;
+    // std::cout << "PPX: " << planeX << " ; PPY: " << planeY << std::endl;
+    // std::cout << "-------------------------------------------" << std::endl;
+

@@ -82,6 +82,9 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "unordered_set": "cpp",
+        "valarray": "cpp",
+        "hash_set": "cpp"
     }
 }
