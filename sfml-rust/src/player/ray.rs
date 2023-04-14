@@ -16,41 +16,38 @@ impl Ray {
     pub fn cast(f: f32, player: &Player, map: &Wall, window: &mut RenderWindow) {
         let mut dist = 0.0;      // Shortest distance to wall
 
+        let width  = window.size().x;
+        let height = window.size().y;
+
         let tex = Texture::from_file("src/player/test_pattern.bmp").unwrap();
         let mut sprite = Sprite::new();
         sprite.set_texture(&tex, false);
 
-        let mut dof_range = 64;
-        let mut dof: i32;        // Deepth of field
-        let fov = f;             // Field of view
+        let dof_range = 64;
+        let mut dof: i32;               // Deepth of field
+        let fov = f;                    // Field of view
 
-        let mut ray_x = 0.0;     // Ray X position
-        let mut ray_y = 0.0;     // Ray Y position
-        let mut ray_ang: f32;         // Ray angle
+        let mut ray_x = 0.0;            // Ray X position
+        let mut ray_y = 0.0;            // Ray Y position
+        let mut ray_ang: f32;           // Ray angle
 
-        let cell = map.cell;     // Cell size
-        let map_w = map.width;   // Map width
-        let map_h = map.height;  // Map height
-        let mut map_tv = 0;      // Cell type on vertical axis (0, 1, 2, 3 etc.)
-        let mut map_th = 0;      // Cell type on horizontal axis (0, 1, 2, 3 etc.)
+        let cell = map.cell as i64;     // Cell size
+        let map_w = map.width as i64;   // Map width
+        let map_h = map.height as i64;  // Map height
+        let mut map_tv = 0;             // Cell type on vertical axis (0, 1, 2, 3 etc.)
+        let mut map_th = 0;             // Cell type on horizontal axis (0, 1, 2, 3 etc.)
         
-        let mut map_x: i32;           // On what cell, on X axis, player is standing
-        let mut map_y: i32;           // On what cell, on Y asix, player is standing
-        let mut map_pos: i32;         // Index for map array
+        let mut map_x: i64;             // On what cell, on X axis, player is standing
+        let mut map_y: i64;             // On what cell, on Y asix, player is standing
+        let mut map_pos: i64;           // Index for map array
 
-        let mut offset_x = 0.0;      // Ray offset on X axis
-        let mut offset_y = 0.0;      // Ray offset on Y axis
-        let grid = &map.grid;  // Our map
+        let mut offset_x = 0.0;         // Ray offset on X axis
+        let mut offset_y = 0.0;         // Ray offset on Y axis
+        let grid = &map.grid;           // Our map
 
-        let player_x = player.player.position().x;  // Player position on X axis in general
-        let player_y = player.player.position().y;  // Player position on Y axis in general
-        let player_ang = radians(player.player.rotation());  // Player angle (heading)
-
-        let mut texture_offset_x_hor: f32;
-        let mut texture_offset_y_hor: f32;
-        
-        let mut texture_offset_x_vert: f32;
-        let mut texture_offset_y_vert: f32;
+        let player_x = player.player.position().x;              // Player position on X axis in general
+        let player_y = player.player.position().y;              // Player position on Y axis in general
+        let player_ang = radians(player.player.rotation());     // Player angle (heading)
 
 
         // Difference between (map_x, map_y) and (player_x, player_y) is simple:
@@ -65,12 +62,11 @@ impl Ray {
 
 
         // Ray angle is in radians
-        // ray_ang = player_ang - radians(fov/2.0);
         ray_ang = player_ang - radians(fov/2.0);
         if ray_ang < 0.0    {ray_ang = ray_ang + 2.0*PI;}
         if ray_ang > 2.0*PI {ray_ang = ray_ang - 2.0*PI;}
 
-        for r in 0..512 as i32 {
+        for r in 0..width as i32 {
         // for r in (0..fov as i32).map(|x| x as f32 * (512.0 / cell as f32)) {
             // Horizontal line
             let mut dist_h = f32::INFINITY;     // We want some big number here for the start
@@ -82,11 +78,11 @@ impl Ray {
 
 
             if ray_ang > PI {
-                ray_y = (((player_y as i32)/cell)*cell) as f32 - 0.0001;   // Rounding to the very edge of the wall
+                ray_y = (((player_y as i64)/cell)*cell) as f32 - 0.0001;   // Rounding to the very edge of the wall
                 offset_y = -cell as f32;
             }
             if ray_ang < PI {
-                ray_y = ((((player_y as i32)/cell)*cell) + cell) as f32;
+                ray_y = ((((player_y as i64)/cell)*cell) + cell) as f32;
                 offset_y = cell as f32;
             }
             if ray_ang == 0.0 || ray_ang == PI {
@@ -101,9 +97,9 @@ impl Ray {
 
 
             while dof < dof_range {
-                map_x = (ray_x as i32)/cell;
-                map_y = (ray_y as i32)/cell;
-                map_pos = map_y * map_w + map_x;    // Index for map grid - that's why it is 1D array
+                map_x = (ray_x as i64)/cell;
+                map_y = (ray_y as i64)/cell;
+                map_pos = map_y * map_w + map_x;        // Index for map grid - that's why it is 1D array
 
                 if (map_pos > 0) && (map_pos < map_w * map_h) && (grid[map_pos as usize] > 0) {
                     // We found the shortest path to horizontal wall
@@ -121,8 +117,7 @@ impl Ray {
                 }
             }
 
-            texture_offset_x_hor = ray_x % cell as f32;
-            texture_offset_y_hor = ray_y % cell as f32;
+
             // sprite.set_scale(Vector2f::new(texture_offset_x_hor as f32, texture_offset_y_hor as f32));
             // sprite.set_position(Vector2f::new(texture_offset_x_hor as f32, texture_offset_y_hor as f32));
 
@@ -137,11 +132,11 @@ impl Ray {
 
             
             if ray_ang > FRAC_PI_2 && ray_ang < 3.0*FRAC_PI_2 {
-                ray_x = (((player_x as i32)/cell)*cell) as f32 - 0.0001;   // Rounding to the very edge of the wall
+                ray_x = (((player_x as i64)/cell)*cell) as f32 - 0.0001;   // Rounding to the very edge of the wall
                 offset_x = -cell as f32;
             }
             if ray_ang < FRAC_PI_2 || ray_ang > 3.0*FRAC_PI_2 {
-                ray_x = ((((player_x as i32)/cell)*cell) + cell) as f32;
+                ray_x = ((((player_x as i64)/cell)*cell) + cell) as f32;
                 offset_x = cell as f32;
                 
             }
@@ -157,9 +152,9 @@ impl Ray {
 
 
             while dof < dof_range {
-                map_x = (ray_x as i32)/cell;
-                map_y = (ray_y as i32)/cell;
-                map_pos = map_y * map_w + map_x;    // Index for map grid - that's why it is 1D array
+                map_x = (ray_x as i64)/cell;
+                map_y = (ray_y as i64)/cell;
+                map_pos = map_y * map_w + map_x;        // Index for map grid - that's why it is 1D array
 
                 if (map_pos > 0) && (map_pos < map_w * map_h) && (grid[map_pos as usize] > 0) {
                     // We found the shortest path to horizontal wall
@@ -177,15 +172,15 @@ impl Ray {
                 }
             }
             
-            texture_offset_x_vert = ray_x % cell as f32;
-            texture_offset_y_vert = ray_y % cell as f32;
+
             // sprite.set_scale(Vector2f::new(texture_offset_x_vert as f32, texture_offset_y_vert as f32));
             // sprite.set_position(Vector2f::new(texture_offset_x_vert as f32, texture_offset_y_vert as f32));
+
 
             // Distance based shading for 3D walls and colouring based on cell type
             let mut wallpaint = Color::rgb(0, 0, 0);
             let brightness: f32;
-            let width_sqr = 512.0*512.0;    // Magic number - screen is 1024, but we're drawing only on the half of it 
+            let width_sqr = (width*width) as f32;    // Magic number - screen is 1024, but we're drawing only on the half of it 
             let dist_sqr: f32;
 
             // We only want to draw shortes ray from dist_v and dist_h
@@ -200,8 +195,12 @@ impl Ray {
 
                 // Shading and slightly different from horizontal walls color
                 match map_tv {
-                    1 => {wallpaint.r = brightness as u8;},
-                    2 => {wallpaint.g = brightness as u8;},
+                    1 => {
+                        wallpaint.r = (brightness/2.0) as u8;
+                        wallpaint.g = (brightness/2.0) as u8;
+                        wallpaint.b = (brightness/2.0) as u8;
+                    },
+                    2 => {wallpaint.r = brightness as u8;},
                     3 => {wallpaint.b = brightness as u8;},
                     4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
                     _ => {wallpaint = Color::BLACK},
@@ -212,21 +211,25 @@ impl Ray {
                 dist = dist_h;
 
                 dist_sqr = dist*dist;
-                brightness = Self::map(dist_sqr, 0.0, width_sqr, 230.0, 0.0);
+                brightness = Self::map(dist_sqr, 0.0, width_sqr, 220.0, 0.0);
             
                 match map_th {
-                    1 => {wallpaint.r = brightness as u8;},
-                    2 => {wallpaint.g = brightness as u8;},
+                    1 => {
+                        wallpaint.r = (brightness/2.0) as u8;
+                        wallpaint.g = (brightness/2.0) as u8;
+                        wallpaint.b = (brightness/2.0) as u8;
+                    },
+                    2 => {wallpaint.r = brightness as u8;},
                     3 => {wallpaint.b = brightness as u8;},
                     4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
                     _ => {wallpaint = Color::BLACK;},
                 }
             } else {brightness = 127.0; wallpaint.b = brightness as u8;}
 
-            let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, wallpaint);
-            ray.draw(window);
+            // let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, wallpaint);
+            // ray.draw(window);
             
-            ray_ang = ray_ang + radians(fov / 512.0);   // Magic number - offset each ray by 1 degree
+            ray_ang = ray_ang + radians(fov / width as f32);   // Magic number - offset each ray by 1 degree
 
             if ray_ang < 0.0    {ray_ang = ray_ang + 2.0*PI;}
             if ray_ang > 2.0*PI {ray_ang = ray_ang - 2.0*PI;}
@@ -240,13 +243,14 @@ impl Ray {
             dist = dist * f32::cos(cell_ang);
 
 
-            let line_height = (cell*400) as f32 / dist;   // Walls height - can be regulated ; screen height = 512
-            let wall_width = 1;                           // Magic number ; 512 is viewport size  -  space taken on the screen
-            let line_offset = 256.0 - line_height/2.0;         // Magic number ; 256 is camera height, no distortion ; screen height = 512
-            let wall_ofsset = 513.0;
+            let line_height = (cell*height as i64) as f32 / dist;   // Walls height - can be regulated ; screen height = 512
+            let wall_width = 1;                                     // Magic number ; 512 is viewport size  -  space taken on the screen
+            // let line_offset = 256.0 - line_height/2.0;              // Magic number ; 256 is camera height, no distortion ; screen height = 512
+            let line_offset = (height/2) as f32 - line_height/2.0;              // Magic number ; 256 is camera height, no distortion ; screen height = 512
+            let wall_ofsset = 1.0;
 
-            // let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset), Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset), wall_width as f32, wallpaint);
-            // wall.draw(window);
+            let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset), Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset), wall_width as f32, wallpaint);
+            wall.draw(window);
         
 
             // sprite.set_texture_rect(IntRect::new((r * wall_width) + (wall_ofsset as i32), line_offset as i32,  1,  (line_height + line_offset) as i32));
@@ -257,31 +261,18 @@ impl Ray {
             // sprite.set_position(Vector2f::new(513.0, 0.0));
             
             
-            sprite.set_position(Vector2f::new(((r * wall_width) + (wall_ofsset as i32)) as f32, line_offset));
+            // sprite.set_position(Vector2f::new(((r * wall_width) + (wall_ofsset as i32)) as f32, line_offset));
             // sprite.set_scale(Vector2f::new(1.0/cell as f32, line_height/cell as f32));
-            sprite.set_scale(Vector2f::new(1.0/cell as f32, line_height/cell as f32));
+            // sprite.set_scale(Vector2f::new(1.0/cell as f32, line_height/cell as f32));
 
-            window.draw(&sprite);
+            // window.draw(&sprite);
         }
-
-
-        // let mut rs = RenderStates::default();
-        // rs.set_texture(Some(&tex));
-        // let font = Font::from_file("src/player/arial.ttf").unwrap();
-        // let mut text = Text::new("", &font, 18);
-        // text.set_string(&format!("sprites\n fps"));
-
-        // window.draw_text(&text, &rs);
     }
 
     // Distance between two points
     fn dist(ax: f32, ay: f32, bx: f32, by: f32) -> f32 {
         f32::sqrt(f32::powi(ax-bx, 2) + f32::powi(ay-by, 2))
     }
-
-    // fn map<T>(num: T, inMin: T, inMax: T, outMin: T, outMax: T) -> T {
-    //     (num-inMin) * (outMax-outMin)/(inMax-inMin) + outMin
-    // }
 
     // Map one range to another
     fn map(num: f32, in_min: f32, in_max: f32, out_min: f32, out_max: f32) -> f32 {

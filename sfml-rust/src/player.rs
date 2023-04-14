@@ -28,6 +28,7 @@ pub struct Player<'a> {
     
     pub size: Vector2f,
     pub position: Vector2f,
+    pub coordinates: Vector2f
 }
 
 impl<'a> Player<'a> {
@@ -53,16 +54,18 @@ impl<'a> Player<'a> {
             position: p,
 
             color: c,
+            coordinates: p,
         }
     }
 
     pub fn advance(&mut self, p: Vector2f, delta_time: f32, map: &Wall) -> () {
-        self.position = p * (2048.0 * delta_time);
+        // self.position = p * (2048.0 * delta_time);
+        self.position = p * (512.0 * delta_time);
         let grid = &map.grid;
 
 
         // Collision detection with wall sliding
-        let dist_from_wall = 12.0;
+        let dist_from_wall = 1.0;
         let mut player_x = self.player.position().x;
         let mut player_y = self.player.position().y;
 
@@ -90,6 +93,9 @@ impl<'a> Player<'a> {
             player_y = player_y + self.position.y;
             self.player.set_position(Vector2f::new(player_x, player_y));
         }
+
+        self.coordinates.x = player_x;
+        self.coordinates.y = player_y;
     }
 
     pub fn rotate(&mut self, a: f32) -> () {

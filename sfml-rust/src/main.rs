@@ -28,6 +28,7 @@ use crate::player::Player;      // Lowercase to avoid doing  `use crate::Player:
 
 use std::f32::consts::PI;       // For PI constant (f32)
 
+use sfml::graphics::View;
 use sfml::{
     // audio::{Sound, SoundBuffer, SoundSource},
     system::{Vector2f, Clock},
@@ -46,7 +47,7 @@ fn radians(a: f32) -> f32 {a * (PI/180.0)}
 fn main() {
     // `viewport_` slice this window in half, so we can draw two images
     let width = 1024;
-    let height = 512;
+    let height = 720;
     let viewport_width = width/2;
 
     // Create the window of the application
@@ -62,11 +63,9 @@ fn main() {
     // let mut some_var = 10;   // If not used anywhere, Rust throws error
     // let mut _some_var = 10;  // Rust will ignore that this variable is unused
 
-    let mut player = Player::new(Vector2f::new((viewport_width/2) as f32, (height/2) as f32), 
-                                         Vector2f::new(10.0, 10.0), 60.0);
-    // let mut player = Player::new(Vector2f::new((29*64) as f32, (57*64) as f32), 
-    //                                      Vector2f::new(10.0, 10.0), 60.0);
-    let map = Wall::new(64, 8, 8);
+    let mut player = Player::new(Vector2f::new((60.0) as f32, (115.0) as f32), 
+                                         Vector2f::new(1.0, 1.0), 60.0);
+    let map = Wall::new(2, 64, 64);
 
 
     // Player movement vars
@@ -103,18 +102,22 @@ fn main() {
                 _ => {}     // `default:` case in C++ `switch`
             }
         } window.clear(Color::rgb(80, 80, 80));
-        // let delta = clock.restart().as_seconds();   // Delta time for movement and animations
 
 
         if up    {player.advance( from_angle(radians(player.rotation)), delta_time, &map);}
         if down  {player.advance(-from_angle(radians(player.rotation)), delta_time, &map);}
-        if right {player.rotate( 90.0 * delta_time);}
-        if left  {player.rotate(-90.0 * delta_time);}
+        if right {player.rotate( 80.0 * delta_time);}
+        if left  {player.rotate(-80.0 * delta_time);}
         
 
+        // let mut camera = View::new(Vector2f::new(player.position.x, player.position.y), Vector2f::new(width as f32, height as f32));
+        // camera.set_center(player.coordinates);
+        // window.set_view(&camera);
+
+
         // Very similar to C++ function call: `map.draw(&window);`
-        map.draw(&mut window);
-        player.draw(&mut window);
+        // map.draw(&mut window);
+        // player.draw(&mut window);
         player.look(&map, &mut window);
 
         window.display();
