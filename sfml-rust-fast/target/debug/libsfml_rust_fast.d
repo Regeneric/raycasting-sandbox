@@ -1,1 +1,0 @@
-/home/hkk/Documents/cpp/raycasting/sfml-rust-fast/target/debug/libsfml_rust_fast.rlib: /home/hkk/Documents/cpp/raycasting/sfml-rust-fast/src/lib.rs /home/hkk/Documents/cpp/raycasting/sfml-rust-fast/src/wline.rs
