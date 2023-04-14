@@ -56,8 +56,8 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn advance(&mut self, p: Vector2f, map: &Wall) -> () {
-        self.position = p;
+    pub fn advance(&mut self, p: Vector2f, delta_time: f32, map: &Wall) -> () {
+        self.position = p * (2048.0 * delta_time);
         let grid = &map.grid;
 
 

@@ -5,3 +5,5 @@ sfml-rust/target/debug
 app
 build/
 rel/
+wolf3d/
+

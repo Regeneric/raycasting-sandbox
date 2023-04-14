@@ -30,7 +30,7 @@ use std::f32::consts::PI;       // For PI constant (f32)
 
 use sfml::{
     // audio::{Sound, SoundBuffer, SoundSource},
-    system::{Vector2f},
+    system::{Vector2f, Clock},
     window::{ContextSettings, Event, Key, Style},
     graphics::{Color, RenderTarget, RenderWindow},
 };
@@ -57,13 +57,15 @@ fn main() {
         "SFML Rust",
         Style::CLOSE,
         &context_settings,
-    );
+    ); window.set_framerate_limit(60);
 
     // let mut some_var = 10;   // If not used anywhere, Rust throws error
     // let mut _some_var = 10;  // Rust will ignore that this variable is unused
 
     let mut player = Player::new(Vector2f::new((viewport_width/2) as f32, (height/2) as f32), 
                                          Vector2f::new(10.0, 10.0), 60.0);
+    // let mut player = Player::new(Vector2f::new((29*64) as f32, (57*64) as f32), 
+    //                                      Vector2f::new(10.0, 10.0), 60.0);
     let map = Wall::new(64, 8, 8);
 
 
@@ -73,9 +75,11 @@ fn main() {
     let mut right = false;
     let mut left = false;
 
-    // let clock = Clock::start();  // To calculate delta time
+    let mut clock = Clock::start();  // To calculate delta time
     // loop - infinite loop until  break;  or program exit  -  while(window.isOpen()) in C++ to catch that 
     loop {
+        let delta_time = clock.restart().as_seconds();
+
         while let Some(event) = window.poll_event() {
             // swtich(event) {} in C++
             match event {
@@ -101,10 +105,11 @@ fn main() {
         } window.clear(Color::rgb(80, 80, 80));
         // let delta = clock.restart().as_seconds();   // Delta time for movement and animations
 
-        if up    {player.advance( from_angle(radians(player.rotation)), &map);}
-        if down  {player.advance(-from_angle(radians(player.rotation)), &map);}
-        if right {player.rotate( 0.06);}
-        if left  {player.rotate(-0.06);}
+
+        if up    {player.advance( from_angle(radians(player.rotation)), delta_time, &map);}
+        if down  {player.advance(-from_angle(radians(player.rotation)), delta_time, &map);}
+        if right {player.rotate( 90.0 * delta_time);}
+        if left  {player.rotate(-90.0 * delta_time);}
         
 
         // Very similar to C++ function call: `map.draw(&window);`
