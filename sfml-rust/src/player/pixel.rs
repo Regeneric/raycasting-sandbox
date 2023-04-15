@@ -15,7 +15,7 @@ impl Pixel {
             vt[3 as usize].position = Vector2f::new(pos.x, pos.y + thick);
 
         let mut vert_buf = VertexBuffer::new(PrimitiveType::QUADS, 4, VertexBufferUsage::STREAM);
-        for vert in vt.iter_mut() {vert.color = col;}
+        // for vert in vt.iter_mut() {vert.color = col;}
 
         vert_buf.update(&vt, 0);
         Pixel {
