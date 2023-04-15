@@ -58,7 +58,7 @@ fn main() {
         "SFML Rust",
         Style::CLOSE,
         &context_settings,
-    ); window.set_framerate_limit(60);
+    );
 
     // let mut some_var = 10;   // If not used anywhere, Rust throws error
     // let mut _some_var = 10;  // Rust will ignore that this variable is unused

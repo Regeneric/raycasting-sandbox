@@ -45,6 +45,10 @@ impl Ray {
         let player_y = player.player.position().y;              // Player position on Y axis in general
         let player_ang = radians(player.player.rotation());     // Player angle (heading)
 
+        let wall_1 = Texture::from_file("wall_1.jpg").unwrap();
+        let wall_2 = Texture::from_file("wall_2.jpg").unwrap();
+        let wall_3 = Texture::from_file("wall_3.jpg").unwrap();
+        let wall_4 = Texture::from_file("wall_4.jpg").unwrap();
 
 
         // Difference between (map_x, map_y) and (player_x, player_y) is simple:
@@ -178,6 +182,7 @@ impl Ray {
             let brightness: f32;
             let width_sqr = (width+width+width) as f32;    // Magic number - screen is 1024, but we're drawing only on the half of it 
             let dist_sqr: f32;
+            let mut sprite = Sprite::new();
 
             // We only want to draw shortes ray from dist_v and dist_h
             if dist_v < dist_h {
@@ -186,41 +191,45 @@ impl Ray {
                 dist = dist_v;
 
                 dist_sqr = dist*dist;
-                brightness = Self::map(dist_sqr, 0.0, width_sqr, 255.0, 0.0);
+                brightness = Self::map(dist_sqr, 0.0, width_sqr, 230.0, 0.0);
 
-                // Shading and slightly different from horizontal walls color
                 match map_tv {
-                    1 => {
-                        wallpaint.r = (brightness/2.0) as u8;
-                        wallpaint.g = (brightness/2.0) as u8;
-                        wallpaint.b = (brightness/2.0) as u8;
-                    },
-                    2 => {wallpaint.r = brightness as u8;},
-                    3 => {wallpaint.b = brightness as u8;},
-                    4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
+                    1 => {sprite.set_texture(&wall_1, true);},
+                    2 => {sprite.set_texture(&wall_2, true);},
+                    3 => {sprite.set_texture(&wall_3, true);},
+                    4 => {sprite.set_texture(&wall_4, true);},
                     _ => {wallpaint = Color::BLACK},
                 }
+
+                wallpaint.r = brightness as u8;
+                wallpaint.g = brightness as u8;
+                wallpaint.b = brightness as u8;
+
+                sprite.set_color(wallpaint);
             } else if dist_h < dist_v {
                 // ray_x = hor_x;
                 // ray_y = hor_y;
                 dist = dist_h;
 
                 dist_sqr = dist*dist;
-                brightness = Self::map(dist_sqr, 0.0, width_sqr, 220.0, 0.0);
+                brightness = Self::map(dist_sqr, 0.0, width_sqr, 255.0, 0.0);
             
                 match map_th {
-                    1 => {
-                        wallpaint.r = (brightness/2.0) as u8;
-                        wallpaint.g = (brightness/2.0) as u8;
-                        wallpaint.b = (brightness/2.0) as u8;
-                    },
-                    2 => {wallpaint.r = brightness as u8;},
-                    3 => {wallpaint.b = brightness as u8;},
-                    4 => {wallpaint.r = brightness as u8; wallpaint.g = brightness as u8;},
-                    _ => {wallpaint = Color::BLACK;},
+                    1 => {sprite.set_texture(&wall_1, true);},
+                    2 => {sprite.set_texture(&wall_2, true);},
+                    3 => {sprite.set_texture(&wall_3, true);},
+                    4 => {sprite.set_texture(&wall_4, true);},
+                    _ => {wallpaint = Color::BLACK},
                 }
+
+                wallpaint.r = brightness as u8;
+                wallpaint.g = brightness as u8;
+                wallpaint.b = brightness as u8;
+
+                sprite.set_color(wallpaint);
             } else {brightness = 127.0; wallpaint.b = brightness as u8;}
 
+            
 
             // let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, wallpaint);
             // ray.draw(window);
@@ -244,25 +253,23 @@ impl Ray {
             let line_offset = (height/2) as f32 - line_height/2.0;  // Camera height
             let wall_ofsset = 1.0;                                  // If we want to draw map and walls on the same time
 
-            let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset),                // FROM where
-                                     Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset),    // TO   where
-                                     wall_width as f32, wallpaint);
-            wall.draw(window);
+            // let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset),                // FROM where
+            //                          Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset),    // TO   where
+            //                          wall_width as f32, wallpaint);
+            // wall.draw(window);
 
+            // Draw 64x64 sprite as WIDTHxHEIGHT
+            // for y in 0..height as i32 {
+            //     sprite.set_position(Vector2f::new(r as f32, y as f32));
+            //     sprite.set_texture_rect(IntRect::new(f32::floor(r as f32 / 16.0) as i32, f32::floor(y as f32 / 12.0) as i32, 1, 1));
+            //     window.draw(&sprite);
+            // }
 
-            // sprite.set_texture_rect(IntRect::new((r * wall_width) + (wall_ofsset as i32), line_offset as i32,  1,  (line_height + line_offset) as i32));
-            // sprite.set_texture_rect(IntRect::new(0, 0,  1, 64));
-            // sprite.set_texture_rect(IntRect::new(0, 0,  1, (line_height) as i32));
-            // sprite.set_scale(Vector2f::new(1.0, line_height));
-            
-            // sprite.set_position(Vector2f::new(513.0, 0.0));
-            
-            
-            // sprite.set_position(Vector2f::new(((r * wall_width) + (wall_ofsset as i32)) as f32, line_offset));
-            // sprite.set_scale(Vector2f::new(1.0/cell as f32, line_height/cell as f32));
-            // sprite.set_scale(Vector2f::new(1.0/cell as f32, line_height/cell as f32));
+            sprite.set_position(Vector2f::new((r * wall_width) as f32, line_offset));
+            sprite.set_texture_rect(IntRect::new(0, 0, 63, 63));     // GOOD LINE
+            sprite.set_scale(Vector2f::new(0.01, line_height/63.0)); // GOOD LINE 
 
-            // window.draw(&sprite);
+            window.draw(&sprite);
         }
     }
 
