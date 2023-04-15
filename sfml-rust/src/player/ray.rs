@@ -1,4 +1,4 @@
-use sfml::graphics::{Color, RenderTarget, Texture, IntRect, RcTexture, RenderStates, Text, Font, Sprite};
+use sfml::graphics::{Color, RenderTarget, Texture, IntRect, RcTexture, RenderStates, Text, Font, Sprite, RectangleShape, Shape};
 use sfml::graphics::{RenderWindow, Transformable};
 use sfml::system::Vector2f;
 
@@ -18,10 +18,6 @@ impl Ray {
 
         let width  = window.size().x;
         let height = window.size().y;
-
-        let tex = Texture::from_file("src/player/test_pattern.bmp").unwrap();
-        let mut sprite = Sprite::new();
-        sprite.set_texture(&tex, false);
 
         let dof_range = 64;
         let mut dof: i32;               // Deepth of field
@@ -50,6 +46,7 @@ impl Ray {
         let player_ang = radians(player.player.rotation());     // Player angle (heading)
 
 
+
         // Difference between (map_x, map_y) and (player_x, player_y) is simple:
         // (0, 1) vs (436.11315, 313.21948)
         // (5, 6) vs (101.31454, 201.41210)
@@ -67,11 +64,10 @@ impl Ray {
         if ray_ang > 2.0*PI {ray_ang = ray_ang - 2.0*PI;}
 
         for r in 0..width as i32 {
-        // for r in (0..fov as i32).map(|x| x as f32 * (512.0 / cell as f32)) {
             // Horizontal line
             let mut dist_h = f32::INFINITY;     // We want some big number here for the start
-            let mut hor_x = player_x;
-            let mut hor_y = player_y;
+            // let mut hor_x = player_x;
+            // let mut hor_y = player_y;
 
             dof = 0;
             let a_tan = -1.0/f32::tan(ray_ang);
@@ -104,9 +100,9 @@ impl Ray {
                 if (map_pos > 0) && (map_pos < map_w * map_h) && (grid[map_pos as usize] > 0) {
                     // We found the shortest path to horizontal wall
                     map_th = grid[map_pos as usize];    // Map has different kinds of cells
-                    hor_x = ray_x;
-                    hor_y = ray_y;
-                    dist_h = Self::dist(player_x, player_y,  hor_x, hor_y);
+                    // hor_x = ray_x;
+                    // hor_y = ray_y;
+                    dist_h = Self::dist(player_x, player_y,  ray_x, ray_y);
 
                     dof = dof_range;
                 } else {
@@ -159,9 +155,9 @@ impl Ray {
                 if (map_pos > 0) && (map_pos < map_w * map_h) && (grid[map_pos as usize] > 0) {
                     // We found the shortest path to horizontal wall
                     map_tv = grid[map_pos as usize];    // Map has different kinds of cells
-                    vert_x = ray_x;
-                    vert_y = ray_y;
-                    dist_v = Self::dist(player_x, player_y,  vert_x, vert_y);
+                    // vert_x = ray_x;
+                    // vert_y = ray_y;
+                    dist_v = Self::dist(player_x, player_y,  ray_x, ray_y);
 
                     dof = dof_range;
                 } else {
@@ -180,15 +176,14 @@ impl Ray {
             // Distance based shading for 3D walls and colouring based on cell type
             let mut wallpaint = Color::rgb(0, 0, 0);
             let brightness: f32;
-            let width_sqr = (width*width) as f32;    // Magic number - screen is 1024, but we're drawing only on the half of it 
+            let width_sqr = (width+width+width) as f32;    // Magic number - screen is 1024, but we're drawing only on the half of it 
             let dist_sqr: f32;
 
             // We only want to draw shortes ray from dist_v and dist_h
             if dist_v < dist_h {
-                ray_x = vert_x;
-                ray_y = vert_y;
+                // ray_x = vert_x;
+                // ray_y = vert_y;
                 dist = dist_v;
-
 
                 dist_sqr = dist*dist;
                 brightness = Self::map(dist_sqr, 0.0, width_sqr, 255.0, 0.0);
@@ -206,8 +201,8 @@ impl Ray {
                     _ => {wallpaint = Color::BLACK},
                 }
             } else if dist_h < dist_v {
-                ray_x = hor_x;
-                ray_y = hor_y;
+                // ray_x = hor_x;
+                // ray_y = hor_y;
                 dist = dist_h;
 
                 dist_sqr = dist*dist;
@@ -226,6 +221,7 @@ impl Ray {
                 }
             } else {brightness = 127.0; wallpaint.b = brightness as u8;}
 
+
             // let ray = WideLine::new(Vector2f::new(player_x, player_y), Vector2f::new(ray_x, ray_y), 1.0, wallpaint);
             // ray.draw(window);
             
@@ -243,15 +239,16 @@ impl Ray {
             dist = dist * f32::cos(cell_ang);
 
 
-            let line_height = (cell*height as i64) as f32 / dist;   // Walls height - can be regulated ; screen height = 512
-            let wall_width = 1;                                     // Magic number ; 512 is viewport size  -  space taken on the screen
-            // let line_offset = 256.0 - line_height/2.0;              // Magic number ; 256 is camera height, no distortion ; screen height = 512
-            let line_offset = (height/2) as f32 - line_height/2.0;              // Magic number ; 256 is camera height, no distortion ; screen height = 512
-            let wall_ofsset = 1.0;
+            let line_height = (cell*height as i64) as f32 / dist;   // Walls height - can be regulated
+            let wall_width = 1;                                     // Space taken on the screen by single strip
+            let line_offset = (height/2) as f32 - line_height/2.0;  // Camera height
+            let wall_ofsset = 1.0;                                  // If we want to draw map and walls on the same time
 
-            let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset), Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset), wall_width as f32, wallpaint);
+            let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset),                // FROM where
+                                     Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset),    // TO   where
+                                     wall_width as f32, wallpaint);
             wall.draw(window);
-        
+
 
             // sprite.set_texture_rect(IntRect::new((r * wall_width) + (wall_ofsset as i32), line_offset as i32,  1,  (line_height + line_offset) as i32));
             // sprite.set_texture_rect(IntRect::new(0, 0,  1, 64));
