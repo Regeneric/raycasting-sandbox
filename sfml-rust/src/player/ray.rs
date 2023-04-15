@@ -251,7 +251,7 @@ impl Ray {
             let line_height = (cell*height as i64) as f32 / dist;   // Walls height - can be regulated
             let wall_width = 1;                                     // Space taken on the screen by single strip
             let line_offset = (height/2) as f32 - line_height/2.0;  // Camera height
-            let wall_ofsset = 1.0;                                  // If we want to draw map and walls on the same time
+            let wall_ofsset = width;                                  // If we want to draw map and walls on the same time
 
             // let wall = WideLine::new(Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_offset),                // FROM where
             //                          Vector2f::new(((r as i32) * wall_width) as f32 + wall_ofsset, line_height+line_offset),    // TO   where
@@ -265,9 +265,10 @@ impl Ray {
             //     window.draw(&sprite);
             // }
 
+            // KNOWN GOOD
             sprite.set_position(Vector2f::new((r * wall_width) as f32, line_offset));
-            sprite.set_texture_rect(IntRect::new(0, 0, 63, 63));     // GOOD LINE
-            sprite.set_scale(Vector2f::new(0.01, line_height/63.0)); // GOOD LINE 
+            sprite.set_texture_rect(IntRect::new(0, 0, 63, 63));
+            sprite.set_scale(Vector2f::new(0.01, line_height/63.0));
 
             window.draw(&sprite);
         }
