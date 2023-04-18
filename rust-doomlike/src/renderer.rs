@@ -199,14 +199,12 @@ impl Renderer {
             // Bottom side
             if self.sectors[s as usize].surface == -1 {
                 for y in (self.sectors[s as usize].surf_arr[x as usize]) .. y1 {
-                    println!("-1 Y: {}", y);
                     verts.extend(Self::pixel(x as f32, y as f32, ceiling, false, window).unwrap());
                 }
             }
             // Top side
             if self.sectors[s as usize].surface == -2 {
                 for y in y2 .. (self.sectors[s as usize].surf_arr[x as usize]) {
-                    println!("-2 Y: {}", y);
                     verts.extend(Self::pixel(x as f32, y as f32, floors, false, window).unwrap());
                 }
             }
