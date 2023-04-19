@@ -1,0 +1,16 @@
+[package]
+name = "rust-vulkan"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.70"                                                                           # Simple error handlign
+lazy_static = "1.4.0"                                                                       # Store static data (eg. vertices)
+log = "0.4.17"                                                                              # Log statements
+nalgebra-glm = "0.18"                                                                       # Replacement for GLM
+png = "0.17.8"                                                                              # Load PNG files (eg. textures)
+pretty_env_logger = "0.4.0"                                                                 # Print pretty logs to console
+thiserror = "1.0.40"                                                                        # Define custom error types
+tobj = {version = "3.2.5", features = ["log"]}                                              # Load 3D models
+vulkanalia = {version = "0.18.0", features = ["libloading", "provisional", "window"]}       # Calls for Vulkan API
+winit = "0.28.3"                                                                            # Window drawing

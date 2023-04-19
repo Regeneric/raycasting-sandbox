@@ -36,9 +36,9 @@ impl Renderer {
         // WS , WE  ;  Z1 , Z2  ;  Top color , Bottom color
         let sectors_data: Vec<i32> = Vec::from([
             0,   4, 0, 40, 2, 3,
-            4,   8, 0, 50, 4, 5,
+            4,   8, 0, 40, 4, 5,
             8,  12, 0, 40, 6, 7,
-            12, 16, 0, 50, 0, 1,
+            12, 16, 0, 40, 0, 1,
         ]);
         
         // X1, Y1  ;  X2, Y2  ;  COLOR
@@ -327,9 +327,9 @@ impl Renderer {
         for s in 0..self.sectors.len() {
             self.sectors[s].dist = 0;   // Clear distance (drawing order)
             
-            if      p.pos.z < self.sectors[s].z1 {self.sectors[s].surface = 1;}     // Top
-            else if p.pos.z > self.sectors[s].z2 {self.sectors[s].surface = 2;}     // Bottom
-            else                                 {self.sectors[s].surface = 0;}
+            // if      p.pos.z < self.sectors[s].z1 {self.sectors[s].surface = 1;}     // Top
+            // else if p.pos.z > self.sectors[s].z2 {self.sectors[s].surface = 2;}     // Bottom
+            // else                                 {self.sectors[s].surface = 0;}
 
             for l in 0..2 {
                 for w in self.sectors[s as usize].ws .. self.sectors[s as usize].we {        
