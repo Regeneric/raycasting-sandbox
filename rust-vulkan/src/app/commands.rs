@@ -1,6 +1,6 @@
 use vulkanalia::prelude::v1_0::*;
 
-use crate :: app :: device :: queue_family_indices :: QueueFamilyIndices;
+use crate::app::device::queue_family_indices::QueueFamilyIndices;
 
 use super::Instance;
 use super::Device;

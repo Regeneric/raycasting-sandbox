@@ -1,12 +1,12 @@
 pub mod app_data;
-mod instance;
-mod device;
-mod swapchain;
-mod render_pass;
-mod pipeline;
-mod framebuffer;
-mod commands;
-mod sync_objects;
+    mod instance;
+    mod device;
+    mod swapchain;
+    mod render_pass;
+    mod pipeline;
+    mod framebuffer;
+    mod commands;
+    mod sync_objects;
 
 use crate :: app :: app_data     :: AppData;
 use crate :: app :: instance     :: AppInstance;

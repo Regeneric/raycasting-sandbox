@@ -1,7 +1,7 @@
 use vulkanalia::prelude::v1_0::*;
 
 mod shader_module;
-use crate :: app :: pipeline :: shader_module :: ShaderModule;
+use crate::app::pipeline::shader_module::ShaderModule;
 
 use super::AppData;
 use anyhow::{anyhow, Result, Ok};

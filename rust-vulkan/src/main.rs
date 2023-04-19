@@ -8,13 +8,12 @@
 mod app;
 use crate::app::App;
 
-use vulkanalia :: prelude :: v1_0 :: *;
-
-use anyhow::Result;
-use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::{WindowBuilder};
+use anyhow     :: Result;
+use winit      :: dpi        :: LogicalSize;
+use winit      :: event      :: {Event, WindowEvent};
+use winit      :: event_loop :: {ControlFlow, EventLoop};
+use winit      :: window     :: WindowBuilder;
+use vulkanalia :: prelude    :: v1_0 :: *;
 
 
 fn main() -> Result<()> {
