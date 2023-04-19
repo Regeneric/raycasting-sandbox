@@ -17,7 +17,7 @@ use vulkanalia::loader::{LibloadingLoader, LIBRARY};
 use vulkanalia::window as vk_window;
 use vulkanalia::prelude::v1_0::*;
 use vulkanalia::Version;
-use vulkanalia::vk::ExtDebugUtilsExtension;
+use vulkanalia::vk::{ExtDebugUtilsExtension, ShaderStageFlags};
 use vulkanalia::vk::KhrSurfaceExtension;
 use vulkanalia::vk::KhrSwapchainExtension;
 
@@ -92,23 +92,68 @@ impl App {
         let device = create_logical_device(&entry, &instance, &mut data)?;          // Set up a logical device to interface with physical device
         create_swapchain(window, &instance, &device, &mut data)?;                   // Infrastructure that will own the buffers (there's no `default buffer`)
         create_swapchain_image_views(&device, &mut data)?;                          // Create a basic image view for every image in the swapchain
+        create_render_pass(&instance, &device, &mut data)?;                         // Tell Vulkan about the framebuffer attachments that will be used while rendering.
+        create_pipeline(&device, &mut data)?;                                       // Sequence of operations that take the vertices and textures in the render targets
+        create_framebuffer(&device, &mut data)?;                                    // Create a framebuffer for all of the images in the swapchain
+        create_command_pool(&instance, &device, &mut data)?;                        // Command pools manage the memory that is used to store the buffers and command buffers are allocated from them
+        create_command_buffer(&device, &mut data)?;                                 // Start allocating command buffers and recording drawing commands in them
+        create_sync_objects(&device, &mut data)?;                                   // Semaphores signals - image ready for rendering; And another one - rendering has finished
 
-        Ok(Self{entry, instance, data, device})     // It's like in JS: `const a = 1; const obj {a};`  
-                                                    // Instead of `const a = 1; const obj {a: a};`
+        Ok(Self{entry, instance, data, device})
     }
 
     // Renders a frame
     unsafe fn render(&mut self, window: &Window) -> Result<()> {
+        // Acquire an image from the swapchain
+        // Execute the command buffer with that image as attachment in the framebuffer
+        // Return the image to the swapchain for presentation
+
+        let image_index = self
+            .device
+            .acquire_next_image_khr(
+                self.data.swapchain, 
+                u64::max_value(), 
+                self.data.image_available_semaphore, 
+                vk::Fence::null()
+            )?.0 as usize;
+
+        let wait_semaphores = &[self.data.image_available_semaphore];
+        let wait_stages = &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
+        let command_buffers = &[self.data.command_buffers[image_index as usize]];
+        let signal_semaphores = &[self.data.image_finished_semaphore];
+        let submit_info = vk::SubmitInfo::builder()
+            .wait_semaphores(wait_semaphores)
+            .wait_dst_stage_mask(wait_stages)
+            .command_buffers(command_buffers)
+            .signal_semaphores(signal_semaphores);
+
+        self.device.queue_submit(
+            self.data.graphics_queue, 
+            &[submit_info], 
+            vk::Fence::null())?;
+
         Ok(())
     }
 
     // Destroys Vulkan app
     unsafe fn destroy(&mut self) {
         // Manually destroying all things we used
+        self.device.destroy_semaphore(self.data.image_available_semaphore, None);
+        self.device.destroy_semaphore(self.data.image_finished_semaphore, None);
+        self.device.destroy_command_pool(self.data.command_pool, None);
+
+        self.data.framebuffers
+            .iter()
+            .for_each(|f| self.device.destroy_framebuffer(*f, None));
+
+        self.device.destroy_pipeline(self.data.pipeline, None);
+        self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
+        self.device.destroy_render_pass(self.data.render_pass, None);
+
         self.data.swapchain_image_views
             .iter()
             .for_each(|iv| self.device.destroy_image_view(*iv, None));
-        
+
         self.device.destroy_swapchain_khr(self.data.swapchain, None);
         self.device.destroy_device(None);
         self.instance.destroy_surface_khr(self.data.surface, None);
@@ -128,6 +173,14 @@ struct AppData {
     swapchain: vk::SwapchainKHR,
     swapchain_images: Vec<vk::Image>,
     swapchain_image_views: Vec<vk::ImageView>,
+    render_pass: vk::RenderPass,
+    pipeline_layout: vk::PipelineLayout,
+    pipeline: vk::Pipeline,
+    framebuffers: Vec<vk::Framebuffer>,
+    command_pool: vk::CommandPool,
+    command_buffers: Vec<vk::CommandBuffer>,
+    image_available_semaphore: vk::Semaphore,
+    image_finished_semaphore: vk::Semaphore,
 }
 
 
@@ -347,7 +400,6 @@ fn get_swapchain_present_mode(present_modes: &[vk::PresentModeKHR]) -> vk::Prese
     // vk::PresentModeKHR::MAILBOX       - If queue is full, replace images with newer ones (aka "tripple buffering")
 
     // Only the vk::PresentModeKHR::FIFO mode is guaranteed to be available
-
     present_modes
         .iter()
         .cloned()
@@ -359,7 +411,6 @@ fn get_swapchain_extent(window: &Window, capabilities: vk::SurfaceCapabilitiesKH
     // Some window managers do allow us to differ here 
     // and this is indicated by setting the width and height 
     // in `current_extent` to a special value: the maximum value of u32
-    
     if capabilities.current_extent.width != u32::max_value() {capabilities.current_extent}
     else {
         let size = window.inner_size();
@@ -402,7 +453,6 @@ unsafe fn create_swapchain(window: &Window, instance: &Instance, device: &Device
     
     // If the graphics queue family and presentation queue family are THE SAME  - EXCLUSIVE
     // If the graphics queue family and presentation queue family are DIFFERENT - CONCURRENT
-
     let mut queue_family_indices = vec![];
     let image_sharing_mode = if indices.graphics != indices.present {
         queue_family_indices.push(indices.graphics);
@@ -469,6 +519,310 @@ unsafe fn create_swapchain_image_views(device: &Device, data: &mut AppData) -> R
             device.create_image_view(&info, None)
         })
         .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(())
+}
+
+
+
+unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
+    let vert = include_bytes!("shaders/vert.spv");
+    let frag = include_bytes!("shaders/frag.spv");
+
+    let vert_shader_module = create_shader_module(device, &vert[..])?;
+    let frag_shader_module = create_shader_module(device, &frag[..])?;
+
+
+    // The first step is telling Vulkan in which pipeline stage the shader is going to be used. 
+    // There is a variant for each of the programmable stages
+    let vert_stage = vk::PipelineShaderStageCreateInfo::builder()
+        .stage(vk::ShaderStageFlags::VERTEX)
+        .module(vert_shader_module)
+        .name(b"main\0");
+
+    let frag_stage = vk::PipelineShaderStageCreateInfo::builder()
+        .stage(vk::ShaderStageFlags::FRAGMENT)
+        .module(frag_shader_module)
+        .name(b"main\0");
+
+
+    // vk::PrimitiveTopology::POINT_LIST     – points from vertices
+    // vk::PrimitiveTopology::LINE_LIST      – line from every 2 vertices without reuse
+    // vk::PrimitiveTopology::LINE_STRIP     – the end vertex of every line is used as start vertex for the next line
+    // vk::PrimitiveTopology::TRIANGLE_LIST  – triangle from every 3 vertices without reuse
+    // vk::PrimitiveTopology::TRIANGLE_STRIP – the second and third vertex of every triangle are used as first two vertices of the next triangle
+
+    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();     // Leaveing it at default
+    let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
+        .topology(vk::PrimitiveTopology::TRIANGLE_LIST)
+        .primitive_restart_enable(false);
+
+
+    // Viewports define the transformation from the image to the framebuffer 
+    // Scissor rectangles define in which regions pixels will actually be stored.
+    let viewport = vk::Viewport::builder()
+        .x(0.0).y(0.0)
+        .width(data.swapchain_extent.width as f32)
+        .height(data.swapchain_extent.height as f32)
+        .max_depth(0.0)
+        .max_depth(1.0);
+
+    let scissor = vk::Rect2D::builder()
+        .offset(vk::Offset2D{x: 0, y: 0})
+        .extent(data.swapchain_extent);
+
+    let viewports = &[viewport];
+    let scissors  = &[scissor];
+    let viewport_state = vk::PipelineViewportStateCreateInfo::builder()
+        .viewports(viewports)
+        .scissors(scissors);
+
+
+    // vk::PolygonMode::FILL  – fill the area of the polygon with fragments
+    // vk::PolygonMode::LINE  – polygon edges are drawn as lines
+    // vk::PolygonMode::POINT – polygon vertices are drawn as points
+    // Using any mode other than fill requires enabling a GPU feature.
+    let rasterization_state = vk::PipelineRasterizationStateCreateInfo::builder()
+        .depth_clamp_enable(false)
+        .rasterizer_discard_enable(false)
+        .polygon_mode(vk::PolygonMode::FILL)
+        .line_width(1.0)    // Line thicker than 1.0 requires to enable the `wide_lines` GPU feature.
+        .cull_mode(vk::CullModeFlags::BACK)
+        .front_face(vk::FrontFace::CLOCKWISE)
+        .depth_bias_enable(false);
+
+
+    // MSAA
+    // Enabling it requires enabling a GPU feature.
+    let multisample_state = vk::PipelineMultisampleStateCreateInfo::builder()
+        .sample_shading_enable(false)
+        .rasterization_samples(vk::SampleCountFlags::_1);
+
+
+    // Color blending
+    let attachment = vk::PipelineColorBlendAttachmentState::builder()
+        .color_write_mask(vk::ColorComponentFlags::all())
+        .blend_enable(false);
+    let attachments = &[attachment];
+    let color_blend_state = vk::PipelineColorBlendStateCreateInfo::builder()
+        .logic_op_enable(false)
+        .logic_op(vk::LogicOp::COPY)
+        .attachments(attachments)
+        .blend_constants([0.0, 0.0, 0.0, 0.0]);
+
+    let dynamic_states = &[
+        vk::DynamicState::VIEWPORT,
+        vk::DynamicState::LINE_WIDTH
+    ];
+    let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
+        .dynamic_states(dynamic_states);
+
+    let layout_info = vk::PipelineLayoutCreateInfo::builder();
+    data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
+
+
+    // There are actually two more parameters: 
+    // `base_pipeline_handle` and `base_pipeline_index`. 
+    // Vulkan allows to create a new graphics pipeline by deriving from an existing pipeline. 
+    let stages = &[vert_stage, frag_stage];
+    let info = vk::GraphicsPipelineCreateInfo::builder()
+        .stages(stages)
+        .vertex_input_state(&vertex_input_state)
+        .input_assembly_state(&input_assembly_state)
+        .viewport_state(&viewport_state)
+        .rasterization_state(&rasterization_state)
+        .multisample_state(&multisample_state)
+        .color_blend_state(&color_blend_state)
+        .layout(data.pipeline_layout)
+        .render_pass(data.render_pass)
+        .subpass(0);
+
+
+    // `vk::GraphicsPipelineCreateInfo` is designed to take and create multiple vk::Pipeline objects in a single call.
+    data.pipeline = device.create_graphics_pipelines(
+        vk::PipelineCache::null(), &[info], None)?.0;
+
+
+    device.destroy_shader_module(vert_shader_module, None);
+    device.destroy_shader_module(frag_shader_module, None);
+
+    Ok(())
+}
+
+unsafe fn create_shader_module(device: &Device, bytecode: &[u8]) -> Result<vk::ShaderModule> {
+    // We only need to specify the length of our bytecode slice and the bytecode slice itself. 
+    // The size of the bytecode is specified in bytes, but the bytecode slice expected by this struct is a `&[u32]` instead of a `&[u8]`
+    let bytecode = Vec::<u8>::from(bytecode);   // We need to realign from u8 to u32, it may not fit in original array
+    let (prefix, code, suffix) = bytecode.align_to::<u32>();
+
+    if !prefix.is_empty() || !suffix.is_empty() {return Err(anyhow!("Shader bytecode is not properly aligned."));}
+
+    // The middle slice returned by this method (code) is a &[u32] and is guaranteed to be correctly aligned. 
+    // Any u8s in our bytecode slice that fell outside this alignment guarantee will appear in the first or third slices returned (prefix and suffix). 
+    let info = vk::ShaderModuleCreateInfo::builder()
+        .code_size(bytecode.len())
+        .code(code);
+
+    Ok(device.create_shader_module(&info, None)?)
+}
+
+unsafe fn create_render_pass(instance: &Instance, device: &Device, data: &mut AppData) -> Result<()> {
+    // A single render pass can consist of multiple subpasses. 
+    // Subpasses are subsequent rendering operations that depend 
+    // on the contents of framebuffers in previous passes
+
+
+
+    // The `load_op` and `store_op` determine what to do with the data in the attachment before rendering and after rendering. 
+    // We have the following choices for `load_op`:
+
+    // vk::AttachmentLoadOp::LOAD      – Preserve the existing contents of the attachment
+    // vk::AttachmentLoadOp::CLEAR     – Clear the values to a constant at the start
+    // vk::AttachmentLoadOp::DONT_CARE – Existing contents are undefined; we don't care about them
+
+
+    // In our case we're going to use the clear operation to clear the framebuffer to black before drawing a new frame. 
+    // There are only two possibilities for the `store_op`:
+
+    // vk::AttachmentStoreOp::STORE     – Rendered contents will be stored in memory and can be read later
+    // vk::AttachmentStoreOp::DONT_CARE – Contents of the framebuffer will be undefined after the rendering operation
+
+
+    let color_attachment = vk::AttachmentDescription::builder()
+        .format(data.swapchain_format)
+        .samples(vk::SampleCountFlags::_1)  // The format of the color attachment should match the format of the `swapchain` images
+        .load_op(vk::AttachmentLoadOp::CLEAR)
+        .store_op(vk::AttachmentStoreOp::STORE)
+        .stencil_load_op(vk::AttachmentLoadOp::DONT_CARE)
+        .stencil_store_op(vk::AttachmentStoreOp::DONT_CARE)
+        .initial_layout(vk::ImageLayout::UNDEFINED)
+        .final_layout(vk::ImageLayout::PRESENT_SRC_KHR);
+    
+    // Textures and framebuffers in Vulkan are represented by vk::Image objects with a certain pixel format
+    // Some of the most common layouts are:
+
+    // vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL – Images used as color attachment
+    // vk::ImageLayout::PRESENT_SRC_KHR          – Images to be presented in the swapchain
+    // vk::ImageLayout::TRANSFER_DST_OPTIMAL     – Images to be used as destination for a memory copy operation
+
+
+    // The index of the attachment in this array is directly referenced 
+    // from the fragment shader with the `layout(location = 0) out vec4 outColor` directive!
+    let color_attachment_ref = vk::AttachmentReference::builder()
+        .attachment(0)
+        .layout(vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL);
+    let color_attachments = &[color_attachment_ref];
+    let subpass = vk::SubpassDescription::builder()
+        .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS)
+        .color_attachments(color_attachments);
+
+    let attachments = &[color_attachment];
+    let subpasses = &[subpass];
+    let info = vk::RenderPassCreateInfo::builder()
+        .attachments(attachments)
+        .subpasses(subpasses);
+
+    data.render_pass = device.create_render_pass(&info, None)?;
+    Ok(())
+}
+
+
+
+unsafe fn create_framebuffer(device: &Device, data: &mut AppData) -> Result<()> {
+    data.framebuffers = data
+        .swapchain_image_views
+        .iter()
+        .map(|i| {
+            let attachments = &[*i];
+            let create_info = vk::FramebufferCreateInfo::builder()
+                .render_pass(data.render_pass)
+                .attachments(attachments)
+                .width(data.swapchain_extent.width)
+                .height(data.swapchain_extent.height)
+                .layers(1);
+
+            device.create_framebuffer(&create_info, None)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(())
+}
+
+
+
+unsafe fn create_command_pool(instance: &Instance, device: &Device, data: &mut AppData) -> Result<()> {
+    // Command buffers are executed by submitting them on one of the device queues
+    // Each command pool can only allocate command buffers that are submitted on a single type of queue
+
+    // There are three possible flags for command pools:
+    // vk::CommandPoolCreateFlags::TRANSIENT            – Hint that command buffers are rerecorded with new commands very often (may change memory allocation behavior)
+    // vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER – Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
+    // vk::CommandPoolCreateFlags::PROTECTED            – Creates "protected" command buffers which are stored in "protected" memory where Vulkan prevents unauthorized operations from accessing the memory
+
+
+    let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
+    let info = vk::CommandPoolCreateInfo::builder()
+        .flags(vk::CommandPoolCreateFlags::empty())
+        .queue_family_index(indices.graphics);
+
+    data.command_pool = device.create_command_pool(&info, None)?;
+    Ok(())
+}
+
+unsafe fn create_command_buffer(device: &Device, data: &mut AppData) -> Result<()> {
+    // The level parameter specifies if the allocated command buffers are primary or secondary command buffers.
+    // vk::CommandBufferLevel::PRIMARY   – Can be submitted to a queue for execution, but cannot be called from other command buffers.
+    // vk::CommandBufferLevel::SECONDARY – Cannot be submitted directly, but can be called from primary command buffers.
+
+    let allocate_info = vk::CommandBufferAllocateInfo::builder()
+        .command_pool(data.command_pool)
+        .level(vk::CommandBufferLevel::PRIMARY)
+        .command_buffer_count(data.framebuffers.len() as u32);
+
+    data.command_buffers = device.allocate_command_buffers(&allocate_info)?;
+
+    for (i, command_buffer) in data.command_buffers.iter().enumerate() {
+        // let inheritance = vk::CommandBufferInheritanceInfo::builder();
+        // let info = vk::CommandBufferBeginInfo::builder()
+        //     .flags(vk::CommandBufferUsageFlags::empty())
+        //     .inheritance_info(&inheritance);
+
+        let info = vk::CommandBufferBeginInfo::builder();
+        device.begin_command_buffer(*command_buffer, &info)?;
+
+        let render_area = vk::Rect2D::builder()
+            .offset(vk::Offset2D::default())
+            .extent(data.swapchain_extent);
+        let color_clear_value = vk::ClearValue {
+            color: vk::ClearColorValue {
+                float32: [0.0, 0.0, 0.0, 1.0],
+            },
+        };
+        let clear_values = &[color_clear_value];
+        let info = vk::RenderPassBeginInfo::builder()
+            .render_pass(data.render_pass)
+            .framebuffer(data.framebuffers[i])
+            .render_area(render_area)
+            .clear_values(clear_values);
+
+        device.cmd_begin_render_pass(*command_buffer, &info, vk::SubpassContents::INLINE);
+        device.cmd_bind_pipeline(*command_buffer, vk::PipelineBindPoint::GRAPHICS, data.pipeline);
+        device.cmd_draw(*command_buffer, 3, 1, 0, 0);
+        device.cmd_end_render_pass(*command_buffer);
+
+        device.end_command_buffer(*command_buffer)?;
+    }
+
+    Ok(())
+}
+
+
+
+unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()> {
+    let semaphore_info = vk::SemaphoreCreateInfo::builder();
+
+    data.image_available_semaphore = device.create_semaphore(&semaphore_info, None)?;
+    data.image_finished_semaphore  = device.create_semaphore(&semaphore_info, None)?;    
 
     Ok(())
 }
