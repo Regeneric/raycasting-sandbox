@@ -73,7 +73,7 @@ impl App {
         AppVertex::create_vertex_buffer(&instance, &device, &mut data)?;                // Vertex buffer to store vertices
         AppCommands::create_command_buffer(&device, &mut data)?;                        // Start allocating command buffers and recording drawing commands in them
         AppSyncObjects::create_sync_objects(&device, &mut data)?;                       // Semaphores signals - image ready for rendering; And another one - rendering has finished                                  
-        AppSwapchain::recreate_swapchain(&instance, &device, &mut data, window)?;
+        AppSwapchain::recreate_swapchain(&instance, &device, &mut data, window)?;       // On window resize, minimize etc.
 
         Ok(Self{entry, instance, data, device, frame: 0, resized: false})
     }
