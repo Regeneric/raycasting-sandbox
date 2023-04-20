@@ -4,7 +4,7 @@ use vulkanalia :: vk      :: KhrSurfaceExtension;
 
 use super::Instance;
 use super::AppData;
-use super::{anyhow, Result, Ok};
+use super::{anyhow, Result};
 use super::SuitabilityError;
 
 #[derive(Copy, Clone, Debug)]

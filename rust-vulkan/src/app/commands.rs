@@ -5,7 +5,7 @@ use crate::app::device::queue_family_indices::QueueFamilyIndices;
 use super::Instance;
 use super::Device;
 use super::AppData;
-use super::{Result, Ok};
+use super::{Result};
 
 pub struct AppCommands {}
 impl AppCommands {

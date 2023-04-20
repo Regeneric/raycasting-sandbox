@@ -9,7 +9,7 @@ use log::*;
 
 use super::Error;
 use super::AppData;
-use super::{anyhow, Result, Ok};
+use super::{anyhow, Result};
 use super::HashSet;
 
 use super::DEVICE_EXTENSIONS;

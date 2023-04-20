@@ -2,7 +2,7 @@ use vulkanalia::prelude::v1_0::*;
 
 use super::Device;
 use super::AppData;
-use super::{Result, Ok};
+use super::Result;
 
 pub struct AppFramebuffer {}
 impl AppFramebuffer {

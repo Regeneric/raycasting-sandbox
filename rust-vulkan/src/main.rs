@@ -28,21 +28,29 @@ fn main() -> Result<()> {
 
     let mut app = unsafe {App::create(&window)?};
     let mut destroying = false;
+    let mut minimized = false;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
 
         // Event handle - like in any other lib (eg. SFML)
         match event {
-            Event::MainEventsCleared if !destroying => {
+            Event::MainEventsCleared if !destroying && !minimized => {
                 unsafe {app.render(&window)}.unwrap();
             },
+
+            Event::WindowEvent {event: WindowEvent::Resized(size), ..} => {
+                if size.width == 0 || size.height == 0 {minimized = true;}
+                else {minimized = false; app.resized = true;}
+            }
+
             Event::WindowEvent {event: WindowEvent::CloseRequested, ..} => {
                 destroying = true;
                 *control_flow = ControlFlow::Exit;
                 unsafe {app.device.device_wait_idle().unwrap();}
                 unsafe {app.destroy();}
             }
+            
             _ => {}
         }
     });

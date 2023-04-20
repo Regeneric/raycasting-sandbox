@@ -1,3 +1,9 @@
+use super::App;
+use super :: render_pass :: AppRenderPass;
+use super :: pipeline    :: AppPipeline;
+use super :: framebuffer :: AppFramebuffer;
+use super :: commands    :: AppCommands;
+
 use vulkanalia :: prelude :: v1_0 :: *;
 use vulkanalia :: vk      :: KhrSwapchainExtension;
 
@@ -151,5 +157,46 @@ impl AppSwapchain {
             .collect::<Result<Vec<_>, _>>()?;
     
         Ok(())
+    }
+
+    pub unsafe fn recreate_swapchain(instance: &Instance, device: &Device, data: &mut AppData, window: &Window) -> Result<()> {
+        // If we want to resize the window, we have to recreate whole swapchain
+        // and all other steps that come with it
+        
+        device.device_wait_idle()?;
+        Self::destroy_swapchain(&device, data);
+
+        Self::create_swapchain(window, &instance, &device, data)?;
+        Self::create_swapchain_image_views(&device, data)?;
+        AppRenderPass::create_render_pass(&instance, &device, data)?;
+        AppPipeline::create_pipeline(&device, data)?;
+        AppFramebuffer::create_framebuffer(&device, data)?;
+        AppCommands::create_command_buffer(&device, data)?;
+        data
+            .images_in_flight
+            .resize(data.swapchain_images.len(), vk::Fence::null());
+
+        Ok(())
+    }
+
+    pub unsafe fn destroy_swapchain(device: &Device, data: &mut AppData) {
+        // We don't need to destroy everything on `recreate_window`
+        // so we just destroy swapchain related stuff
+
+        data.framebuffers
+            .iter()
+            .for_each(|f| device.destroy_framebuffer(*f, None));
+
+        device.free_command_buffers(data.command_pool, &data.command_buffers);
+
+        device.destroy_pipeline(data.pipeline, None);
+        device.destroy_pipeline_layout(data.pipeline_layout, None);
+        device.destroy_render_pass(data.render_pass, None);
+
+        data.swapchain_image_views
+            .iter()
+            .for_each(|iv| device.destroy_image_view(*iv, None));
+
+        device.destroy_swapchain_khr(data.swapchain, None);
     }
 }

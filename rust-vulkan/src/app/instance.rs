@@ -1,6 +1,6 @@
 use vulkanalia::prelude::v1_0::*;
 
-use super::{anyhow, Result, Ok};
+use super::{anyhow, Result};
 use super::vk_window;
 use super::Window;
 use super::HashSet;

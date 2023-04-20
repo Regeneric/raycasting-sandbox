@@ -20,7 +20,7 @@ use crate :: app :: sync_objects :: AppSyncObjects;
 
 
 use thiserror :: Error;
-use anyhow    :: {anyhow, Result, Ok};
+use anyhow    :: {anyhow, Result};
 
 use std   :: collections :: HashSet;
 use winit :: window      :: {Window};
@@ -42,11 +42,12 @@ const MAX_FRAMES_IN_FLIGHT: usize = 2;
 
 #[derive(Clone, Debug)]
 pub struct App {
+pub device: Device,
+pub resized: bool,
     entry: Entry,
     instance: Instance,
     data: AppData,
     frame: usize,
-    pub device: Device,
 }
 impl App {
     // Creates Vulkan app
@@ -67,8 +68,9 @@ impl App {
         AppCommands::create_command_pool(&instance, &device, &mut data)?;               // Command pools manage the memory that is used to store the buffers and command buffers are allocated from them
         AppCommands::create_command_buffer(&device, &mut data)?;                        // Start allocating command buffers and recording drawing commands in them
         AppSyncObjects::create_sync_objects(&device, &mut data)?;                       // Semaphores signals - image ready for rendering; And another one - rendering has finished                                  
+        AppSwapchain::recreate_swapchain(&instance, &device, &mut data, window)?;
 
-        Ok(Self{entry, instance, data, device, frame: 0})
+        Ok(Self{entry, instance, data, device, frame: 0, resized: false})
     }
 
     // Renders a frame
@@ -82,15 +84,21 @@ impl App {
             true,
             u64::max_value())?;
 
-        // Using the maximum value of a 64 bit unsigned integer disables the timeout.
-        let image_index = self
-            .device
-            .acquire_next_image_khr(
-                self.data.swapchain, 
-                u64::max_value(), 
-                self.data.image_available_semaphore[self.frame], 
-                vk::Fence::null()
-            )?.0 as usize;
+        let result = self.device.acquire_next_image_khr(
+            self.data.swapchain, 
+            u64::max_value(), 
+            self.data.image_available_semaphore[self.frame], 
+            vk::Fence::null());
+
+        let image_index = match result {
+            Ok((image_index, _)) => image_index as usize,
+            Err(vk::ErrorCode::OUT_OF_DATE_KHR) => return AppSwapchain::recreate_swapchain(
+                                                                        &self.instance, 
+                                                                        &self.device, 
+                                                                        &mut self.data, 
+                                                                        window),
+            Err(e) => return Err(anyhow!(e))
+        };
 
         if !self.data.images_in_flight[image_index as usize].is_null() {
             self.device.wait_for_fences(
@@ -125,8 +133,15 @@ impl App {
             .swapchains(swapchains)
             .image_indices(image_indices);
 
-        self.device.queue_present_khr(self.data.present_queue, &present_info)?;
-        // self.device.queue_wait_idle(self.data.present_queue)?;
+        // Recreate the swapchain if it is suboptimal, because we want the best possible result
+        let result = self.device.queue_present_khr(self.data.present_queue, &present_info);
+        let changed = result == Ok(vk::SuccessCode::SUBOPTIMAL_KHR) 
+                   || result == Err(vk::ErrorCode::OUT_OF_DATE_KHR);
+        
+        if self.resized || changed {
+            self.resized = false;
+            AppSwapchain::recreate_swapchain(&self.instance, &self.device, &mut self.data, window)?;
+        } else if let Err(e) = result {return  Err(anyhow!(e));}
 
         self.frame = (self.frame + 1) % MAX_FRAMES_IN_FLIGHT;
         
@@ -136,6 +151,8 @@ impl App {
     // Destroys Vulkan app
     pub unsafe fn destroy(&mut self) {
         // Manually destroying all things we used
+        AppSwapchain::destroy_swapchain(&self.device, &mut self.data);
+
         self.data.in_flight_fences
             .iter()
             .for_each(|f| self.device.destroy_fence(*f, None));
@@ -148,20 +165,6 @@ impl App {
             .for_each(|s| self.device.destroy_semaphore(*s, None));
 
         self.device.destroy_command_pool(self.data.command_pool, None);
-
-        self.data.framebuffers
-            .iter()
-            .for_each(|f| self.device.destroy_framebuffer(*f, None));
-
-        self.device.destroy_pipeline(self.data.pipeline, None);
-        self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
-        self.device.destroy_render_pass(self.data.render_pass, None);
-
-        self.data.swapchain_image_views
-            .iter()
-            .for_each(|iv| self.device.destroy_image_view(*iv, None));
-
-        self.device.destroy_swapchain_khr(self.data.swapchain, None);
         self.device.destroy_device(None);
         self.instance.destroy_surface_khr(self.data.surface, None);
         self.instance.destroy_instance(None);
