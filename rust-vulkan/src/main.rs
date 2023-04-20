@@ -1,9 +1,9 @@
-#![allow(
-    dead_code,
-    unused_variables,
-    clippy::too_many_arguments,
-    clippy::unnecessary_wraps
-)]
+// #![allow(
+//     dead_code,
+//     unused_variables,
+//     clippy::too_many_arguments,
+//     clippy::unnecessary_wraps
+// )]
 
 mod app;
 use crate::app::App;

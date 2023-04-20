@@ -22,4 +22,6 @@ pub struct AppData {
     pub image_finished_semaphore: Vec<vk::Semaphore>,
     pub in_flight_fences: Vec<vk::Fence>,
     pub images_in_flight: Vec<vk::Fence>,
+    pub vertex_buffer: vk::Buffer,
+    pub vertex_buffer_memory: vk::DeviceMemory,
 }

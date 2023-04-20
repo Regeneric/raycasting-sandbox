@@ -7,6 +7,8 @@ pub mod app_data;
     mod framebuffer;
     mod commands;
     mod sync_objects;
+    mod vertex;
+    mod shared;
 
 use crate :: app :: app_data     :: AppData;
 use crate :: app :: instance     :: AppInstance;
@@ -17,6 +19,8 @@ use crate :: app :: pipeline     :: AppPipeline;
 use crate :: app :: framebuffer  :: AppFramebuffer;
 use crate :: app :: commands     :: AppCommands;
 use crate :: app :: sync_objects :: AppSyncObjects;
+use crate :: app :: vertex       :: AppVertex;
+use crate :: app :: shared       :: Commons;
 
 
 use thiserror :: Error;
@@ -66,6 +70,7 @@ impl App {
         AppPipeline::create_pipeline(&device, &mut data)?;                              // Sequence of operations that take the vertices and textures in the render targets                                           
         AppFramebuffer::create_framebuffer(&device, &mut data)?;                        // Create a framebuffer for all of the images in the swapchain
         AppCommands::create_command_pool(&instance, &device, &mut data)?;               // Command pools manage the memory that is used to store the buffers and command buffers are allocated from them
+        AppVertex::create_vertex_buffer(&instance, &device, &mut data)?;                // Vertex buffer to store vertices
         AppCommands::create_command_buffer(&device, &mut data)?;                        // Start allocating command buffers and recording drawing commands in them
         AppSyncObjects::create_sync_objects(&device, &mut data)?;                       // Semaphores signals - image ready for rendering; And another one - rendering has finished                                  
         AppSwapchain::recreate_swapchain(&instance, &device, &mut data, window)?;
@@ -151,6 +156,8 @@ impl App {
     // Destroys Vulkan app
     pub unsafe fn destroy(&mut self) {
         // Manually destroying all things we used
+        self.device.device_wait_idle().unwrap();
+
         AppSwapchain::destroy_swapchain(&self.device, &mut self.data);
 
         self.data.in_flight_fences
@@ -164,6 +171,8 @@ impl App {
             .iter()
             .for_each(|s| self.device.destroy_semaphore(*s, None));
 
+        self.device.free_memory(self.data.vertex_buffer_memory, None);
+        self.device.destroy_buffer(self.data.vertex_buffer, None);
         self.device.destroy_command_pool(self.data.command_pool, None);
         self.device.destroy_device(None);
         self.instance.destroy_surface_khr(self.data.surface, None);

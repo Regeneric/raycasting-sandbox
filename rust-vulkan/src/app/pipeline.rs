@@ -4,6 +4,7 @@ mod shader_module;
 use crate::app::pipeline::shader_module::ShaderModule;
 
 use super::AppData;
+use super::AppVertex;
 use anyhow::{anyhow, Result, Ok};
 
 pub struct AppPipeline {}
@@ -34,8 +35,12 @@ impl AppPipeline {
         // vk::PrimitiveTopology::LINE_STRIP     – the end vertex of every line is used as start vertex for the next line
         // vk::PrimitiveTopology::TRIANGLE_LIST  – triangle from every 3 vertices without reuse
         // vk::PrimitiveTopology::TRIANGLE_STRIP – the second and third vertex of every triangle are used as first two vertices of the next triangle
-    
-        let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();     // Leaveing it at default
+        
+        let binding_descriptions = &[AppVertex::binding_description()];
+        let attribute_descriptions = AppVertex::attribute_descriptions();
+        let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
+            .vertex_binding_descriptions(binding_descriptions)
+            .vertex_attribute_descriptions(&attribute_descriptions);
         let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
             .topology(vk::PrimitiveTopology::TRIANGLE_LIST)
             .primitive_restart_enable(false);

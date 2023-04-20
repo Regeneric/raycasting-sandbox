@@ -66,6 +66,7 @@ impl AppCommands {
     
             device.cmd_begin_render_pass(*command_buffer, &info, vk::SubpassContents::INLINE);
             device.cmd_bind_pipeline(*command_buffer, vk::PipelineBindPoint::GRAPHICS, data.pipeline);
+            device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
             device.cmd_draw(*command_buffer, 3, 1, 0, 0);
             device.cmd_end_render_pass(*command_buffer);
     
