@@ -25,7 +25,7 @@ impl Player {
         }
 
         Player {
-            pos: Vector3i::new(-37, -190, 5),   // X - left/right   Y - close/far   Z - up/down
+            pos: Vector3i::new(-37, -190, 5),   // XYZ
             angle: 25,
             look_up_down: 0,
             cos: cos_buff,
@@ -51,11 +51,11 @@ impl Player {
             },
             Key::D => {
                 self.angle = self.angle + 4;
-                if self.angle > 359 {self.angle = self.angle - 360;}
+                if self.angle > 359 {self.angle = self.angle - 359;}
             },
             Key::A => {
                 self.angle = self.angle - 4;
-                if self.angle <   0 {self.angle = self.angle + 360;}
+                if self.angle <   0 {self.angle = self.angle + 359;}
             },
 
             // Move up and down in Z axis

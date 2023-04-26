@@ -6,4 +6,4 @@ sfml-rust/target/debug
 build/
 rel/
 wolf3d/
-
+level_editor

@@ -1,6 +1,3 @@
-use super::WIDTH;
-use super::RENDER_W;
-
 pub struct Sector {
     // Wall start and end
     pub ws: i32, 
@@ -15,7 +12,7 @@ pub struct Sector {
     pub cb: i32,
 
     // Hold points on surface if there's something to draw
-    pub surf_arr: [i32; RENDER_W as usize],   // Screen width
+    pub surf_arr: [i32; 160],   // Screen width
     pub surface: i32,
 
     // Distance for drawing order
@@ -34,7 +31,7 @@ impl Sector {
             ct: _ct,
             cb: _cb,
 
-            surf_arr: [0; RENDER_W as usize],
+            surf_arr: [0; 160],
             surface: 0,
 
             dist: 0
