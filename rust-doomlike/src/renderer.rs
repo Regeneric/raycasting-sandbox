@@ -9,7 +9,13 @@ use crate::renderer::wall::Wall;
 mod sector;
 use crate::renderer::sector::Sector;
 
-use super::{RENDER_W, RENDER_H, WIDTH, HEIGHT};
+mod level;
+use crate::renderer::level::Level;
+
+pub mod texture;
+use crate::renderer::texture::Texture;
+
+use super::{RENDER_W, RENDER_H, WIDTH, FOV};
 
 
 use sfml::{
@@ -18,152 +24,105 @@ use sfml::{
 };
 
 
-pub struct Renderer {
-    walls: Vec<Wall>,
-    sectors: Vec<Sector>
+
+pub fn pixel(x: f32, y:  f32,  r: u8, g: u8, b: u8,  draw: bool, window: &mut RenderWindow) -> Option<Vec<Vertex>> {        
+    let mut pixels = VertexBuffer::new(PrimitiveType::QUADS, 4 as u32, VertexBufferUsage::STREAM);
+    let mut verts: Vec<Vertex> = Vec::new();
+        verts.push(Vertex::new(Vector2f::new(x      , y)      , Color::rgb(r, g, b) , Vector2f::new(x      , y)));
+        verts.push(Vertex::new(Vector2f::new(x + 1.0, y)      , Color::rgb(r, g, b) , Vector2f::new(x + 1.0, y)));
+        verts.push(Vertex::new(Vector2f::new(x + 1.0, y + 1.0), Color::rgb(r, g, b) , Vector2f::new(x + 1.0, y + 1.0)));
+        verts.push(Vertex::new(Vector2f::new(x      , y + 1.0), Color::rgb(r, g, b) , Vector2f::new(x      , y + 1.0)));
+    
+
+    // If we wanna draw those quads, we can
+    // But if there's a lot of them, we can return an array
+    // and draw at once with some external VertexBuffer
+    if draw {
+        pixels.update(&verts, 0);
+        window.draw(&pixels); 
+        None
+    } else {Some(verts)}
 }
+
+
+pub struct Renderer {
+    sectors: i32,
+    sectors_data: Vec<Sector>,
+
+    walls: i32,
+    walls_data: Vec<Wall>,
+
+    textures: Vec<Texture>,
+}
+
 impl Renderer {
     pub fn new() -> Self {
-        let (sb, wb) = Self::data_loader();
+        // let level: Level = Self::data_loader().unwrap();
+        let (w, s, sb, wb) = Level::level_loader();
+        let tb = Texture::texture_loader();
 
         Renderer{
-            walls: wb,
-            sectors: sb,
+            sectors: s,
+            walls: w,
+
+            sectors_data: sb,
+            walls_data: wb,
+
+            textures: tb,
         }
     }
- 
-    fn data_loader() -> (Vec<Sector>, Vec<Wall>) {
-        // Prototype of data loader - it will be working on files in the near future
 
-        // WS , WE  ;  Z1 , Z2  ;  Top color , Bottom color
-        let sectors_data: Vec<i32> = Vec::from([
-            0,   4, 0, 40, 2, 3,
-            4,   8, 0, 40, 4, 5,
-            8,  12, 0, 40, 6, 7,
-            12, 16, 0, 40, 0, 1,
-        ]);
-        
-        // X1, Y1  ;  X2, Y2  ;  COLOR
-        let walls_data: Vec<i32> = Vec::from([
-             0,  0, 32,  0, 0,
-            32,  0, 32, 32, 1,
-            32, 32,  0, 32, 0,
-             0, 32,  0,  0, 1,
+    pub fn floor(&mut self, p: &Player, window: &mut RenderWindow) {
+        let offset_x = RENDER_W as i32 / 2;
+        let offset_y = RENDER_H as i32 / 2;
 
-            64,  0, 96,  0, 2,
-            96,  0, 96, 32, 3,
-            96, 32, 64, 32, 2,
-            64, 32, 64,  0, 3,
+        let mut look_up_down = -p.look_up_down as f32 * 2.0;
+        if look_up_down > RENDER_H {look_up_down = RENDER_H}
 
-            64, 64, 96, 64, 4,
-            96, 64, 96, 96, 5,
-            96, 96, 64, 96, 4,
-            64, 96, 64, 64, 5,
+        let mut move_up_down = p.pos.z as f32 / 16.0;
+        if move_up_down == 0.0 {move_up_down = 0.001;}
 
-             0, 64, 32, 64, 6,
-            32, 64, 32, 96, 7,
-            32, 96,  0, 96, 6,
-             0, 96,  0, 64, 7,
-        ]);
+        // let mut start_y = -look_up_down;
+        // let mut end_y = offset_y as f32;
 
-        let all_sectors = 4;
-        let (mut v1, mut v2) = (0, 0);
+        // if move_up_down < 0.0 {start_y = offset_y as f32; end_y = offset_y as f32 + look_up_down;}
 
-        let mut sb: Vec<Sector> = Vec::new();
-        let mut wb: Vec<Wall>   = Vec::new();
+        let mut start_y = -offset_y as f32;
+        let mut end_y = -look_up_down;
 
-        for s in 0..all_sectors {
-            // Adding new sector
-            sb.push(Sector::new(sectors_data[v1+0],     // WS
-                                sectors_data[v1+1],     // WE
-                                sectors_data[v1+2],     // Z1
-                                sectors_data[v1+3] -    // Z2
-                                sectors_data[v1+2],
-                                sectors_data[v1+4],     // Top color
-                                sectors_data[v1+5]));   // Bottom color
-            v1 = v1+6;
+        if move_up_down > 0.0 {start_y = -look_up_down; end_y = offset_y as f32 + look_up_down;}
 
-            for _ in sb[s].ws .. sb[s].we {
-                // Adding walls to current sector
-                wb.push(Wall::new(walls_data[v2+0],     // Bottom X1
-                                  walls_data[v2+1],     // Bottom Y1
-                                  walls_data[v2+2],     // Top X2
-                                  walls_data[v2+3],     // Top Y2
-                                  walls_data[v2+4]));   // Wall color
-                v2 = v2+5;
+        for y in start_y as i32 .. end_y as i32 {
+            for x in -offset_x..offset_x {
+                let mut z = y as f32 + look_up_down;
+                if z == 0.0 {z = 0.0001}
+
+                let floor_x: f32 =   x as f32 / z * move_up_down;
+                let floor_y: f32 = FOV as f32 / z * move_up_down;
+
+                let mut rotate_x = floor_x * p.sin[p.angle as usize] - floor_y * p.cos[p.angle as usize] - (p.pos.y as f32 / 15.0);
+                let mut rotate_y = floor_x * p.cos[p.angle as usize] + floor_y * p.sin[p.angle as usize] + (p.pos.x as f32 / 15.0);
+
+
+                if rotate_x < 0.0 {rotate_x = -rotate_x + 1.0}
+                if rotate_y < 0.0 {rotate_y = -rotate_y + 1.0}
+                if rotate_x <= 0.0 || rotate_y <= 0.0 || rotate_x >= 5.0 || rotate_y >= 5.0 {continue;}     // Drawing a small square
+             
+                if rotate_x as i32 % 2 == rotate_y as i32 % 2 {pixel((x+ offset_x) as f32, (y+ offset_y) as f32,  255,0,0,  true, window);}
+                else {pixel((x+ offset_x) as f32, (y+ offset_y) as f32,  0,255,0,  true, window);}
             }
         }
-
-        (sb, wb)
     }
 
-
-    fn pixel(x: f32, y:  f32, color: Color,  draw: bool, window: &mut RenderWindow) -> Option<Vec<Vertex>> {        
-        let mut pixels = VertexBuffer::new(PrimitiveType::QUADS, 4 as u32, VertexBufferUsage::STREAM);
-        let mut verts: Vec<Vertex> = Vec::new();
-            verts.push(Vertex::new(Vector2f::new(x      , y)      , color , Vector2f::new(x      , y)));
-            verts.push(Vertex::new(Vector2f::new(x + 1.0, y)      , color , Vector2f::new(x + 1.0, y)));
-            verts.push(Vertex::new(Vector2f::new(x + 1.0, y + 1.0), color , Vector2f::new(x + 1.0, y + 1.0)));
-            verts.push(Vertex::new(Vector2f::new(x      , y + 1.0), color , Vector2f::new(x      , y + 1.0)));
-        
-
-        // If we wanna draw those quads, we can
-        // But if there's a lot of them, we can return an array
-        // and draw at once with some external VertexBuffer
-        if draw {
-            pixels.update(&verts, 0);
-            window.draw(&pixels); 
-            None
-        } else {Some(verts)}
-    }
-
-    fn wall(&mut self, mut x1: i32, mut x2: i32,  b1: i32, b2: i32,  t1: i32, t2: i32,  c: i32,  s: i32,  window: &mut RenderWindow) {
-        let wallpaint;
-        match c {
-            0 => wallpaint = Color::rgb(80 , 80 , 80),
-            1 => wallpaint = Color::rgb(100, 100, 100),
-            2 => wallpaint = Color::rgb(200, 0  , 0),
-            3 => wallpaint = Color::rgb(230, 0  , 0),
-            4 => wallpaint = Color::rgb(0  , 200, 0),
-            5 => wallpaint = Color::rgb(0  , 230, 0),
-            6 => wallpaint = Color::rgb(0  , 0  , 200),
-            7 => wallpaint = Color::rgb(0  , 0  , 230),
-
-            _ => wallpaint = Color::BLACK,
-        }
-
-        let floors;
-        match self.sectors[s as usize].cb {
-            3 => floors = Color::rgb(80 , 70 , 80),
-            4 => floors = Color::rgb(100, 90 , 100),
-            5 => floors = Color::rgb(190, 0  , 0),
-            6 => floors = Color::rgb(210, 0  , 0),
-            7 => floors = Color::rgb(0  , 190, 0),
-            0 => floors = Color::rgb(0  , 220, 0),
-            1 => floors = Color::rgb(0  , 0  , 190),
-            2 => floors = Color::rgb(0  , 0  , 220),
-
-            _ => floors = Color::BLACK,
-        }
-
-        let ceiling;
-        match self.sectors[s as usize].ct {
-            7 => ceiling = Color::rgb(80 , 90 , 80),
-            6 => ceiling = Color::rgb(100, 110, 100),
-            5 => ceiling = Color::rgb(200, 10  , 0),
-            4 => ceiling = Color::rgb(230, 10  , 0),
-            3 => ceiling = Color::rgb(0  , 210, 0),
-            2 => ceiling = Color::rgb(0  , 240, 0),
-            1 => ceiling = Color::rgb(0  , 10  , 200),
-            0 => ceiling = Color::rgb(0  , 10  , 230),
-
-            _ => ceiling = Color::BLACK,
-        }
-
-
+    fn wall(&mut self, mut x1: i32, mut x2: i32,  b1: i32, b2: i32,  t1: i32, t2: i32,  s: usize,  w: i32, face: i32,  p: &Player, window: &mut RenderWindow) {
         let width  = RENDER_W as i32;
         let height = RENDER_H as i32;
         let mut verts: Vec<Vertex> = Vec::new();
+
+        let wt = self.walls_data[w as usize].texture;
+        let mut horizontal_texture: f32 = 0.0;
+        let horizontal_step: f32 = ((self.textures[wt as usize].width * self.walls_data[w as usize].v) as f32) / (x2-x1) as f32;
+
 
         let delta_y_bottom = b2 - b1;
         let delta_y_top    = t2 - t1;
@@ -172,7 +131,7 @@ impl Renderer {
         let starting_x = x1;
 
         // Don't draw behind camera
-        if x1 < 1       {x1 = 1;}
+        if x1 < 1       {horizontal_texture = horizontal_texture - horizontal_step * x1 as f32; x1 = 1;}
         if x2 < 1       {x2 = 1;}
         if x1 > width-1 {x1 = width-1;}
         if x2 > width-1 {x2 = width-1;}
@@ -181,66 +140,113 @@ impl Renderer {
             let mut y1 = delta_y_bottom * (f32::floor((x - starting_x) as f32 + 0.5)) as i32 / delta_x + b1;
             let mut y2 = delta_y_top    * (f32::floor((x - starting_x) as f32 + 0.5)) as i32 / delta_x + t1;
 
+            let mut vertical_texture: f32 = 0.0;
+            let vertical_step: f32 = (self.textures[wt as usize].height as f32) / (y2-y1) as f32;
+
             // Clip Y axis - don't draw where camera doesn't see
-            if y1 < 1        {y1 = 1;}
+            if y1 < 1        {vertical_texture = vertical_texture - vertical_step * y1 as f32; y1 = 1;}
             if y2 < 1        {y2 = 1;}
             if y1 > height-1 {y1 = height-1;}
             if y2 > height-1 {y2 = height-1;}
 
 
-            for sector in self.sectors.iter_mut() {
-                if sector.surface == 1 {
-                    sector.surf_arr[x as usize] = y1;
-                }
-                if sector.surface == 2 {
-                    sector.surf_arr[x as usize] = y2;
-                }
-
-                if sector.surface == -1 {
-                    for y in (sector.surf_arr[x as usize]) .. y1 {
-                        verts.extend(Self::pixel(x as f32, y as f32, floors, false, window).unwrap());
-                    }
-                }
-                if sector.surface == -2 {
-                    for y in y2 .. (sector.surf_arr[x as usize]) {
-                        verts.extend(Self::pixel(x as f32, y as f32, ceiling, false, window).unwrap());
-                    }
-                }
-            }
-
-            // Normal walls
-            for y in y1..y2 {
-                verts.extend(Self::pixel(x as f32, y as f32, wallpaint, false, window).unwrap());
-            }
-
-            // // Bottom points
-            // if self.sectors[s as usize].surface == 1 {
-            //     self.sectors[s as usize].surf_arr[x as usize] = y1;
-            //     continue;
-            // }
-            // // Top points
-            // if self.sectors[s as usize].surface == 2 {
-            //     self.sectors[s as usize].surf_arr[x as usize] = y2;
-            //     continue;
-            // }
-
-            // // Bottom side
-            // if self.sectors[s as usize].surface == -1 {
-            //     for y in (self.sectors[s as usize].surf_arr[x as usize]) .. y1 {
-            //         verts.extend(Self::pixel(x as f32, y as f32, floors, false, window).unwrap());
+            // for sector in self.sectors_data.iter_mut() {
+            //     if sector.surface == 1 {
+            //         sector.surf_arr[x as usize] = y1;
             //     }
-            // }
-            // // Top side
-            // if self.sectors[s as usize].surface == -2 {
-            //     for y in y2 .. (self.sectors[s as usize].surf_arr[x as usize]) {
-            //         verts.extend(Self::pixel(x as f32, y as f32, ceiling, false, window).unwrap());
+            //     if sector.surface == 2 {
+            //         sector.surf_arr[x as usize] = y2;
+            //     }
+
+            //     if sector.surface == -1 {
+            //         for y in (sector.surf_arr[x as usize]) .. y1 {
+            //             verts.extend(Self::pixel(x as f32, y as f32, floors, false, window).unwrap());
+            //         }
+            //     }
+            //     if sector.surface == -2 {
+            //         for y in y2 .. (sector.surf_arr[x as usize]) {
+            //             verts.extend(Self::pixel(x as f32, y as f32, ceiling, false, window).unwrap());
+            //         }
             //     }
             // }
 
-            // // Normal walls
-            // for y in y1..y2 {
-            //     verts.extend(Self::pixel(x as f32, y as f32, wallpaint, false, window).unwrap());
-            // }
+            // Walls
+            if face == 0 {
+                if self.sectors_data[s].surface == 1 {self.sectors_data[s].surf_arr[x as usize] = y1;}      // Bottom
+                if self.sectors_data[s].surface == 2 {self.sectors_data[s].surf_arr[x as usize] = y2;}      // Top
+                for y in y1..y2 {
+                    // let p = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
+                    //            self.textures[wt as usize].width + (horizontal_texture as i32 * 3)) as usize;
+                    // let p = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
+                    //            self.textures[wt as usize].width + ((horizontal_texture as i32 % self.textures[wt as usize].width) * 3)) as usize;
+                    let p = (((self.textures[wt as usize].height - (vertical_texture as i32 % self.textures[wt as usize].height) - 1)*3) * 
+                               self.textures[wt as usize].width + ((horizontal_texture as i32 % self.textures[wt as usize].width) * 3)) as usize;
+
+
+                    let r: u8  = self.textures[wt as usize].data[p+0] - self.walls_data[w as usize].shade;
+                    let g: u8  = self.textures[wt as usize].data[p+1] - self.walls_data[w as usize].shade;
+                    let b: u8  = self.textures[wt as usize].data[p+2] - self.walls_data[w as usize].shade;
+
+                    verts.extend(pixel(x as f32, y as f32,  r,g,b,  false, window).unwrap());
+                    vertical_texture = vertical_texture + vertical_step;
+                } horizontal_texture = horizontal_texture + horizontal_step;
+            }
+
+            // Top and bottom
+            if face == 1 {
+                // for y in y1..y2 {
+                //     verts.extend(pixel(x as f32, y as f32,  255,0,0,  false, window).unwrap());    // Walls
+                // }
+
+
+                let offset_x = RENDER_W as i32 / 2;
+                let offset_y = RENDER_H as i32 / 2;
+                let persp_x  = x - offset_x;
+                let mut wall_offset = 0;
+                let tile = self.sectors_data[s].texture_scale * 7;
+
+                if self.sectors_data[s].surface == 1 {y2 = self.sectors_data[s].surf_arr[x as usize]; wall_offset = self.sectors_data[s].z1;}      // Bottom
+                if self.sectors_data[s].surface == 2 {y1 = self.sectors_data[s].surf_arr[x as usize]; wall_offset = self.sectors_data[s].z2;}      // Top
+        
+                let mut look_up_down = -p.look_up_down as f32 * 6.28;
+                if look_up_down > RENDER_H {look_up_down = RENDER_H}
+        
+                let mut move_up_down = (p.pos.z as f32 - wall_offset as f32) / offset_y as f32;
+                if move_up_down == 0.0 {move_up_down = 0.001;}
+        
+        
+                let start_y = y1 - offset_y;
+                let end_y = y2 - offset_y;
+        
+                for y in start_y as i32 .. end_y as i32 {
+                    let mut z = y as f32 + look_up_down;
+                    if z == 0.0 {z = 0.0001}
+    
+                    let floor_x: f32 = persp_x as f32 / z * move_up_down * tile as f32;
+                    let floor_y: f32 =     FOV as f32 / z * move_up_down * tile as f32;
+    
+                    let mut rotate_x = floor_x * p.sin[p.angle as usize] - floor_y * p.cos[p.angle as usize] + (p.pos.y as f32 / 60.0 * tile as f32);
+                    let mut rotate_y = floor_x * p.cos[p.angle as usize] + floor_y * p.sin[p.angle as usize] - (p.pos.x as f32 / 60.0 * tile as f32);
+    
+    
+                    if rotate_x < 0.0 {rotate_x = -rotate_x + 1.0}
+                    if rotate_y < 0.0 {rotate_y = -rotate_y + 1.0}
+                    
+                    // if rotate_x as i32 % 2 == rotate_y as i32 % 2 {pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  255,0,0,  true, window);}
+                    // else {pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  0,255,0,  true, window);}
+                    let st = self.sectors_data[s].surface_texture;
+
+                    let p = (((self.textures[st as usize].height - (rotate_y as i32 % self.textures[st as usize].height) - 1)*3) * 
+                               self.textures[st as usize].width + ((rotate_x as i32 % self.textures[st as usize].width) * 3)) as usize;
+
+                    let r: u8  = self.textures[st as usize].data[p+0];
+                    let g: u8  = self.textures[st as usize].data[p+1];
+                    let b: u8  = self.textures[st as usize].data[p+2];
+
+                    verts.extend(pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  r,g,b,  false, window).unwrap());
+                }
+            }
+
         }
 
         let mut pixels = VertexBuffer::new(PrimitiveType::QUADS, verts.len() as u32, VertexBufferUsage::STREAM);
@@ -267,6 +273,9 @@ impl Renderer {
 
     // Methods
     pub fn draw(&mut self, p: &Player, window: &mut RenderWindow) {
+        // Texture::test_textures(0, &self.textures, window);
+
+
         let width  = RENDER_W as i32;
         let height = RENDER_H as i32;
 
@@ -277,37 +286,51 @@ impl Renderer {
         let cos: f32 = p.cos[usize::try_from(p.angle).unwrap()];
         let sin: f32 = p.sin[usize::try_from(p.angle).unwrap()];
 
-        let fov = 200;
         let mut cycles: i32;
 
 
-        for s in 0..self.sectors.len()-1 {
-            for w in 0..(self.sectors.len()-s-1) {
-                if self.sectors[w].dist < self.sectors[w+1].dist {
-                    self.sectors.swap(w, w+1);
+        for s in 0..(self.sectors_data.len()-1) as usize {
+            for w in 0..(self.sectors_data.len()-s-1) {
+                if self.sectors_data[w].dist < self.sectors_data[w+1].dist {
+                    self.sectors_data.swap(w, w+1);
                 }
             }
         }
 
 
-        for s in 0..self.sectors.len() {
-            self.sectors[s].dist = 0;   // Clear distance (drawing order)
+        for s in 0..self.sectors_data.len() {
+            self.sectors_data[s].dist = 0;   // Clear distance (drawing order)
             
-            if      p.pos.z < self.sectors[s].z1 {self.sectors[s].surface = 1; cycles = 2;}     // Top
-            else if p.pos.z > self.sectors[s].z2 {self.sectors[s].surface = 2; cycles = 2;}     // Bottom
-            else                                 {self.sectors[s].surface = 0; cycles = 2;}
+            if p.pos.z < self.sectors_data[s].z1 {
+                self.sectors_data[s].surface = 1; 
+                cycles = 2;
+                for x in 0..(RENDER_W as usize) {
+                    self.sectors_data[s].surf_arr[x] = RENDER_H as i32;
+                }
 
-            for l in 0..2 {
-                for w in self.sectors[s as usize].ws .. self.sectors[s as usize].we {        
+            } else if p.pos.z > self.sectors_data[s].z2 {
+                self.sectors_data[s].surface = 2; 
+                cycles = 2;
+                for x in 0..(RENDER_W as usize) {
+                    self.sectors_data[s].surf_arr[x] = 0;
+                }
+
+            } else {
+                self.sectors_data[s].surface = 0; 
+                cycles = 1;
+            }
+
+            for l in 0..cycles {
+                for w in self.sectors_data[s].ws .. self.sectors_data[s].we {        
                     // Offset bottom 2 point by player
-                    let mut x1: i32 = self.walls[w as usize].x1 - p.pos.x; 
-                    let mut y1: i32 = self.walls[w as usize].y1 - p.pos.y;
+                    let mut x1: i32 = self.walls_data[w as usize].x1 - p.pos.x; 
+                    let mut y1: i32 = self.walls_data[w as usize].y1 - p.pos.y;
                     
-                    let mut x2: i32 = self.walls[w as usize].x2 - p.pos.x; 
-                    let mut y2: i32 = self.walls[w as usize].y2 - p.pos.y;
+                    let mut x2: i32 = self.walls_data[w as usize].x2 - p.pos.x; 
+                    let mut y2: i32 = self.walls_data[w as usize].y2 - p.pos.y;
                     
-                    // Drawing backfaces
-                    if l == 0 {
+                    // Don't draw backfaces if we can't see them
+                    if l == 1 {
                         swap(&mut x1, &mut x2);
                         swap(&mut y1, &mut y2);
                     }
@@ -326,13 +349,14 @@ impl Renderer {
                     wy[3] = wy[1];
 
                     // Walls distance - this is drawing order
-                    self.sectors[s as usize].dist = f32::floor((self.sectors[s as usize].dist + Self::dist(0, 0,  (wx[0]+wx[1])/2,  (wy[0]+wy[1])/2)) as f32) as i32;
+                    self.sectors_data[s].dist = 
+                        f32::floor((self.sectors_data[s].dist + Self::dist(0, 0,  (wx[0]+wx[1])/2,  (wy[0]+wy[1])/2)) as f32) as i32;
     
                     // World Z height
-                    wz[0] = self.sectors[s as usize].z1 - p.pos.z + ((p.look_up_down * wy[0])/32);
-                    wz[1] = self.sectors[s as usize].z1 - p.pos.z + ((p.look_up_down * wy[1])/32);
-                    wz[2] = self.sectors[s as usize].z2 - p.pos.z + ((p.look_up_down * wy[0])/32);
-                    wz[3] = self.sectors[s as usize].z2 - p.pos.z + ((p.look_up_down * wy[1])/32);
+                    wz[0] = self.sectors_data[s].z1 - p.pos.z + ((p.look_up_down * wy[0])/32);
+                    wz[1] = self.sectors_data[s].z1 - p.pos.z + ((p.look_up_down * wy[1])/32);
+                    wz[2] = self.sectors_data[s].z2 - p.pos.z + ((p.look_up_down * wy[0])/32);
+                    wz[3] = self.sectors_data[s].z2 - p.pos.z + ((p.look_up_down * wy[1])/32);
             
             
                     if wy[0] < 1 && wy[1] < 1 {continue;} // Wall behind player, don't draw it
@@ -352,18 +376,17 @@ impl Renderer {
                     }
             
                     // Screen X and Y position
-                    wx[0] = wx[0]*fov / wy[0]+(width/2);  wy[0] = wz[0]*fov / wy[0]+(height/2);
-                    wx[1] = wx[1]*fov / wy[1]+(width/2);  wy[1] = wz[1]*fov / wy[1]+(height/2);
-                    wx[2] = wx[2]*fov / wy[2]+(width/2);  wy[2] = wz[2]*fov / wy[2]+(height/2);
-                    wx[3] = wx[3]*fov / wy[3]+(width/2);  wy[3] = wz[3]*fov / wy[3]+(height/2);
+                    wx[0] = wx[0]*FOV / wy[0]+(width/2);  wy[0] = wz[0]*FOV / wy[0]+(height/2);
+                    wx[1] = wx[1]*FOV / wy[1]+(width/2);  wy[1] = wz[1]*FOV / wy[1]+(height/2);
+                    wx[2] = wx[2]*FOV / wy[2]+(width/2);  wy[2] = wz[2]*FOV / wy[2]+(height/2);
+                    wx[3] = wx[3]*FOV / wy[3]+(width/2);  wy[3] = wz[3]*FOV / wy[3]+(height/2);
             
                     
                     let (x1, x2,  y1, y2,  y3, y4) = (wx[0], wx[1],  wy[0], wy[1],  wy[2], wy[3]);
-                    self.wall(x1, x2,  y1, y2,  y3, y4,  self.walls[w as usize].color, s as i32,  window);
+                    self.wall(x1, x2,  y1, y2,  y3, y4,  s, w, l,  p, window);
                 }
     
-                self.sectors[s].dist = self.sectors[s as usize].dist  /  (self.sectors[s].we - self.sectors[s].ws); 
-                self.sectors[s as usize].surface = self.sectors[s as usize].surface * -1;   // Flip to negative - draw top or bottom surface
+                self.sectors_data[s].dist = self.sectors_data[s].dist  /  (self.sectors_data[s].we - self.sectors_data[s].ws); 
             }
         }
     }

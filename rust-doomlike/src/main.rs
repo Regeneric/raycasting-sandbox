@@ -1,6 +1,7 @@
 mod renderer;
 use crate::renderer::Renderer;
 use crate::renderer::player::Player;
+use crate::renderer::texture::Texture as HkkTexture;
 
 use sfml::{
     // audio::{Sound, SoundBuffer, SoundSource},
@@ -18,6 +19,7 @@ const RENDER_H: f32 = 120.0;
 
 const FPS: u32 = 24;
 const VELOCITY: i32 = 4;
+const FOV: i32 = 200;
 
 
 fn main() {
@@ -91,6 +93,10 @@ fn main() {
         if look_up   {player.advance(Key::Up,   VELOCITY);}
         if look_down {player.advance(Key::Down, VELOCITY);} 
 
+
+        // let textures = HkkTexture::texture_loader();
+        // HkkTexture::test_textures(1, textures, &mut window);
+        // renderer.floor(&player, &mut window);
         renderer.draw(&player, &mut window);
         window.display();
     }
