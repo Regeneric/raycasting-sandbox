@@ -49,28 +49,28 @@ impl Player {
                 self.pos.x = self.pos.x - delta_x as i32;
                 self.pos.y = self.pos.y - delta_y as i32;
             },
-            Key::D => {
+            Key::A => {
                 self.angle = self.angle + 4;
                 if self.angle > 359 {self.angle = self.angle - 360;}
             },
-            Key::A => {
+            Key::D => {
                 self.angle = self.angle - 4;
                 if self.angle <   0 {self.angle = self.angle + 360;}
             },
 
             // Move up and down in Z axis
-            Key::Q  => self.pos.z = self.pos.z - 4,
-            Key::E  => self.pos.z = self.pos.z + 4,
+            Key::E  => self.pos.z = self.pos.z - 4,
+            Key::Q  => self.pos.z = self.pos.z + 4,
 
-            Key::Up   => self.look_up_down = self.look_up_down + 1,
-            Key::Down => self.look_up_down = self.look_up_down - 1,
+            Key::Down   => self.look_up_down = self.look_up_down + 1,
+            Key::Up => self.look_up_down = self.look_up_down - 1,
             
             // Strafe right/left
-            Key::Right => {
+            Key::Left => {
                 self.pos.x = self.pos.x + delta_y as i32;
                 self.pos.y = self.pos.y - delta_x as i32;
             },
-            Key::Left  => {
+            Key::Right  => {
                 self.pos.x = self.pos.x - delta_y as i32;
                 self.pos.y = self.pos.y + delta_x as i32;
             },

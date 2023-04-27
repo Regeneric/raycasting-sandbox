@@ -149,43 +149,22 @@ impl Renderer {
             if y1 > height-1 {y1 = height-1;}
             if y2 > height-1 {y2 = height-1;}
 
-
-            // for sector in self.sectors_data.iter_mut() {
-            //     if sector.surface == 1 {
-            //         sector.surf_arr[x as usize] = y1;
-            //     }
-            //     if sector.surface == 2 {
-            //         sector.surf_arr[x as usize] = y2;
-            //     }
-
-            //     if sector.surface == -1 {
-            //         for y in (sector.surf_arr[x as usize]) .. y1 {
-            //             verts.extend(Self::pixel(x as f32, y as f32, floors, false, window).unwrap());
-            //         }
-            //     }
-            //     if sector.surface == -2 {
-            //         for y in y2 .. (sector.surf_arr[x as usize]) {
-            //             verts.extend(Self::pixel(x as f32, y as f32, ceiling, false, window).unwrap());
-            //         }
-            //     }
-            // }
-
             // Walls
             if face == 0 {
                 if self.sectors_data[s].surface == 1 {self.sectors_data[s].surf_arr[x as usize] = y1;}      // Bottom
                 if self.sectors_data[s].surface == 2 {self.sectors_data[s].surf_arr[x as usize] = y2;}      // Top
                 for y in y1..y2 {
-                    // let p = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
-                    //            self.textures[wt as usize].width + (horizontal_texture as i32 * 3)) as usize;
-                    // let p = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
+                    let p1 = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
+                               self.textures[wt as usize].width + (horizontal_texture as i32 * 3)) as usize;
+                    // let p2 = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
                     //            self.textures[wt as usize].width + ((horizontal_texture as i32 % self.textures[wt as usize].width) * 3)) as usize;
                     let p = (((self.textures[wt as usize].height - (vertical_texture as i32 % self.textures[wt as usize].height) - 1)*3) * 
                                self.textures[wt as usize].width + ((horizontal_texture as i32 % self.textures[wt as usize].width) * 3)) as usize;
 
 
-                    let r: u8  = self.textures[wt as usize].data[p+0] - self.walls_data[w as usize].shade;
-                    let g: u8  = self.textures[wt as usize].data[p+1] - self.walls_data[w as usize].shade;
-                    let b: u8  = self.textures[wt as usize].data[p+2] - self.walls_data[w as usize].shade;
+                    let r: u8  = self.textures[wt as usize].data[p+0] - self.walls_data[w as usize].shade/5;
+                    let g: u8  = self.textures[wt as usize].data[p+1] - self.walls_data[w as usize].shade/5;
+                    let b: u8  = self.textures[wt as usize].data[p+2] - self.walls_data[w as usize].shade/5;
 
                     verts.extend(pixel(x as f32, y as f32,  r,g,b,  false, window).unwrap());
                     vertical_texture = vertical_texture + vertical_step;
@@ -300,7 +279,9 @@ impl Renderer {
 
         for s in 0..self.sectors_data.len() {
             self.sectors_data[s].dist = 0;   // Clear distance (drawing order)
-            
+
+
+            // z1 - bottom ; z2 - top
             if p.pos.z < self.sectors_data[s].z1 {
                 self.sectors_data[s].surface = 1; 
                 cycles = 2;

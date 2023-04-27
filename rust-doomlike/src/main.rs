@@ -14,8 +14,8 @@ use sfml::{
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 
-const RENDER_W: f32 = 160.0;
-const RENDER_H: f32 = 120.0;
+const RENDER_W: f32 = 320.0;
+const RENDER_H: f32 = 240.0;
 
 const FPS: u32 = 24;
 const VELOCITY: i32 = 4;
@@ -32,7 +32,8 @@ fn main() {
     ); 
     
     // Scale render resolution to window resolution
-    let viewport = View::new(Vector2f::new(RENDER_W/2.0, RENDER_H/2.0), Vector2f::new(RENDER_W, RENDER_H));
+    let mut viewport = View::new(Vector2f::new(RENDER_W/2.0, RENDER_H/2.0), Vector2f::new(RENDER_W, RENDER_H));
+    viewport.set_rotation(180.0);
     window.set_view(&viewport);
     window.set_framerate_limit(FPS);
 

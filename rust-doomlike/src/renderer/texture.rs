@@ -3,7 +3,7 @@ use sfml::graphics::RenderWindow;
 use serde::{Deserialize};
 
 use std::error::Error;
-use std::fs::File;
+use std::fs::{File, read_dir};
 use std::io::BufReader;
 
 use super::pixel;
@@ -47,8 +47,10 @@ impl Texture {
 
     fn data_loader() -> Result<Vec<Texture>, Box<dyn Error>> {
         let mut textures: Vec<Texture> = Vec::new();
-        
-        for t in 0..2 {
+        let all_files = read_dir("src/textures/").unwrap();
+        let iter_to = all_files.count();
+
+        for t in 0..iter_to/2 {
             let path = "src/textures/T";
             let num = t.to_string();
             let ext = ".json";
