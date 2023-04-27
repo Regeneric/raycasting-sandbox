@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde::{Deserialize};
 
 use std::error::Error;
 use std::fs::File;
@@ -19,7 +18,7 @@ pub struct Level {
 }
 impl Level {
     fn data_loader() -> Result<Level, Box<dyn Error>> {
-        let file = File::open("src/level.json")?;
+        let file = File::open("src/levels/level.json")?;
         let reader = BufReader::new(file);
         let mut level: Level = serde_json::from_reader(reader).expect("Bad JSON file");
         

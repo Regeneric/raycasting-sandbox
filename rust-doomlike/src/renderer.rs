@@ -1,26 +1,22 @@
 pub mod player;
-use std::mem::swap;
+    mod wall;
+    mod sector;
+    mod level;
+    mod texture;
 
 pub use crate::renderer::player::Player;
+    use crate::renderer::wall::Wall;
+    use crate::renderer::sector::Sector;
+    use crate::renderer::level::Level;
+    use crate::renderer::texture::Texture;
 
-mod wall;
-use crate::renderer::wall::Wall;
-
-mod sector;
-use crate::renderer::sector::Sector;
-
-mod level;
-use crate::renderer::level::Level;
-
-pub mod texture;
-use crate::renderer::texture::Texture;
-
-use super::{RENDER_W, RENDER_H, WIDTH, FOV};
+use super::{RENDER_W, RENDER_H, FOV};
+use std::mem::swap;
 
 
 use sfml::{
     graphics::{RenderWindow, Color, Vertex, VertexBufferUsage, PrimitiveType, VertexBuffer, RenderTarget}, 
-    system::{Vector2f},
+    system::Vector2f,
 };
 
 
@@ -46,10 +42,10 @@ pub fn pixel(x: f32, y:  f32,  r: u8, g: u8, b: u8,  draw: bool, window: &mut Re
 
 
 pub struct Renderer {
-    sectors: i32,
+    _sectors: i32,
     sectors_data: Vec<Sector>,
 
-    walls: i32,
+    _walls: i32,
     walls_data: Vec<Wall>,
 
     textures: Vec<Texture>,
@@ -57,13 +53,12 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new() -> Self {
-        // let level: Level = Self::data_loader().unwrap();
         let (w, s, sb, wb) = Level::level_loader();
         let tb = Texture::texture_loader();
 
         Renderer{
-            sectors: s,
-            walls: w,
+            _sectors: s,
+            _walls: w,
 
             sectors_data: sb,
             walls_data: wb,
@@ -72,46 +67,52 @@ impl Renderer {
         }
     }
 
-    pub fn floor(&mut self, p: &Player, window: &mut RenderWindow) {
+
+    fn floor(x: i32, mut y1: i32, mut y2: i32, s: usize,  sectors: &Vec<Sector>, textures: &Vec<Texture>, player: &Player, window: &mut RenderWindow) -> Vec<Vertex> {                    
         let offset_x = RENDER_W as i32 / 2;
         let offset_y = RENDER_H as i32 / 2;
+        let persp_x = x - offset_x;
+        let mut wall_offset = 0;
+        let tile = sectors[s].texture_scale * 7;
+        let mut verts: Vec<Vertex> = Vec::new();
 
-        let mut look_up_down = -p.look_up_down as f32 * 2.0;
+        if sectors[s].surface == 1 {y2 = sectors[s].surf_arr[x as usize]; wall_offset = sectors[s].z1;}
+        if sectors[s].surface == 2 {y1 = sectors[s].surf_arr[x as usize]; wall_offset = sectors[s].z2;}
+
+        let mut look_up_down = -player.look_up_down as f32 * 6.28;
         if look_up_down > RENDER_H {look_up_down = RENDER_H}
 
-        let mut move_up_down = p.pos.z as f32 / 16.0;
+        let mut move_up_down = (player.pos.z as f32 - wall_offset as f32) / offset_y as f32;
         if move_up_down == 0.0 {move_up_down = 0.001;}
 
-        // let mut start_y = -look_up_down;
-        // let mut end_y = offset_y as f32;
 
-        // if move_up_down < 0.0 {start_y = offset_y as f32; end_y = offset_y as f32 + look_up_down;}
-
-        let mut start_y = -offset_y as f32;
-        let mut end_y = -look_up_down;
-
-        if move_up_down > 0.0 {start_y = -look_up_down; end_y = offset_y as f32 + look_up_down;}
+        let start_y = y1 - offset_y;
+        let end_y   = y2 - offset_y;
 
         for y in start_y as i32 .. end_y as i32 {
-            for x in -offset_x..offset_x {
-                let mut z = y as f32 + look_up_down;
-                if z == 0.0 {z = 0.0001}
+            let mut z = y as f32 + look_up_down;
+            if z == 0.0 {z = 0.0001}
 
-                let floor_x: f32 =   x as f32 / z * move_up_down;
-                let floor_y: f32 = FOV as f32 / z * move_up_down;
+            let floor_x: f32 = persp_x as f32 / z * move_up_down * tile as f32;
+            let floor_y: f32 =     FOV as f32 / z * move_up_down * tile as f32;
 
-                let mut rotate_x = floor_x * p.sin[p.angle as usize] - floor_y * p.cos[p.angle as usize] - (p.pos.y as f32 / 15.0);
-                let mut rotate_y = floor_x * p.cos[p.angle as usize] + floor_y * p.sin[p.angle as usize] + (p.pos.x as f32 / 15.0);
+            let mut rotate_x = floor_x * player.sin[player.angle as usize] - floor_y * player.cos[player.angle as usize] + (player.pos.y as f32 / 60.0 * tile as f32);
+            let mut rotate_y = floor_x * player.cos[player.angle as usize] + floor_y * player.sin[player.angle as usize] - (player.pos.x as f32 / 60.0 * tile as f32);
+
+            if rotate_x < 0.0 {rotate_x = -rotate_x + 1.0}
+            if rotate_y < 0.0 {rotate_y = -rotate_y + 1.0}
+
+            let st = sectors[s].surface_texture;
+            let p = (((textures[st as usize].height - (rotate_y as i32 % textures[st as usize].height) - 1)*3) * 
+                        textures[st as usize].width + ((rotate_x as i32 % textures[st as usize].width) * 3)) as usize;
+
+            let r: u8  = textures[st as usize].data[p+0];
+            let g: u8  = textures[st as usize].data[p+1];
+            let b: u8  = textures[st as usize].data[p+2];
 
 
-                if rotate_x < 0.0 {rotate_x = -rotate_x + 1.0}
-                if rotate_y < 0.0 {rotate_y = -rotate_y + 1.0}
-                if rotate_x <= 0.0 || rotate_y <= 0.0 || rotate_x >= 5.0 || rotate_y >= 5.0 {continue;}     // Drawing a small square
-             
-                if rotate_x as i32 % 2 == rotate_y as i32 % 2 {pixel((x+ offset_x) as f32, (y+ offset_y) as f32,  255,0,0,  true, window);}
-                else {pixel((x+ offset_x) as f32, (y+ offset_y) as f32,  0,255,0,  true, window);}
-            }
-        }
+            verts.extend(pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  r,g,b,  false, window).unwrap());
+        } verts
     }
 
     fn wall(&mut self, mut x1: i32, mut x2: i32,  b1: i32, b2: i32,  t1: i32, t2: i32,  s: usize,  w: i32, face: i32,  p: &Player, window: &mut RenderWindow) {
@@ -154,8 +155,8 @@ impl Renderer {
                 if self.sectors_data[s].surface == 1 {self.sectors_data[s].surf_arr[x as usize] = y1;}      // Bottom
                 if self.sectors_data[s].surface == 2 {self.sectors_data[s].surf_arr[x as usize] = y2;}      // Top
                 for y in y1..y2 {
-                    let p1 = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
-                               self.textures[wt as usize].width + (horizontal_texture as i32 * 3)) as usize;
+                    // let p1 = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
+                    //            self.textures[wt as usize].width + (horizontal_texture as i32 * 3)) as usize;
                     // let p2 = (((self.textures[wt as usize].height - vertical_texture as i32 - 1)*3) * 
                     //            self.textures[wt as usize].width + ((horizontal_texture as i32 % self.textures[wt as usize].width) * 3)) as usize;
                     let p = (((self.textures[wt as usize].height - (vertical_texture as i32 % self.textures[wt as usize].height) - 1)*3) * 
@@ -173,57 +174,8 @@ impl Renderer {
 
             // Top and bottom
             if face == 1 {
-                // for y in y1..y2 {
-                //     verts.extend(pixel(x as f32, y as f32,  255,0,0,  false, window).unwrap());    // Walls
-                // }
-
-
-                let offset_x = RENDER_W as i32 / 2;
-                let offset_y = RENDER_H as i32 / 2;
-                let persp_x  = x - offset_x;
-                let mut wall_offset = 0;
-                let tile = self.sectors_data[s].texture_scale * 7;
-
-                if self.sectors_data[s].surface == 1 {y2 = self.sectors_data[s].surf_arr[x as usize]; wall_offset = self.sectors_data[s].z1;}      // Bottom
-                if self.sectors_data[s].surface == 2 {y1 = self.sectors_data[s].surf_arr[x as usize]; wall_offset = self.sectors_data[s].z2;}      // Top
-        
-                let mut look_up_down = -p.look_up_down as f32 * 6.28;
-                if look_up_down > RENDER_H {look_up_down = RENDER_H}
-        
-                let mut move_up_down = (p.pos.z as f32 - wall_offset as f32) / offset_y as f32;
-                if move_up_down == 0.0 {move_up_down = 0.001;}
-        
-        
-                let start_y = y1 - offset_y;
-                let end_y = y2 - offset_y;
-        
-                for y in start_y as i32 .. end_y as i32 {
-                    let mut z = y as f32 + look_up_down;
-                    if z == 0.0 {z = 0.0001}
-    
-                    let floor_x: f32 = persp_x as f32 / z * move_up_down * tile as f32;
-                    let floor_y: f32 =     FOV as f32 / z * move_up_down * tile as f32;
-    
-                    let mut rotate_x = floor_x * p.sin[p.angle as usize] - floor_y * p.cos[p.angle as usize] + (p.pos.y as f32 / 60.0 * tile as f32);
-                    let mut rotate_y = floor_x * p.cos[p.angle as usize] + floor_y * p.sin[p.angle as usize] - (p.pos.x as f32 / 60.0 * tile as f32);
-    
-    
-                    if rotate_x < 0.0 {rotate_x = -rotate_x + 1.0}
-                    if rotate_y < 0.0 {rotate_y = -rotate_y + 1.0}
-                    
-                    // if rotate_x as i32 % 2 == rotate_y as i32 % 2 {pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  255,0,0,  true, window);}
-                    // else {pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  0,255,0,  true, window);}
-                    let st = self.sectors_data[s].surface_texture;
-
-                    let p = (((self.textures[st as usize].height - (rotate_y as i32 % self.textures[st as usize].height) - 1)*3) * 
-                               self.textures[st as usize].width + ((rotate_x as i32 % self.textures[st as usize].width) * 3)) as usize;
-
-                    let r: u8  = self.textures[st as usize].data[p+0];
-                    let g: u8  = self.textures[st as usize].data[p+1];
-                    let b: u8  = self.textures[st as usize].data[p+2];
-
-                    verts.extend(pixel((persp_x + offset_x) as f32, (y + offset_y) as f32,  r,g,b,  false, window).unwrap());
-                }
+                // Draw top and bottom surfaces
+                verts.extend(Self::floor(x, y1, y2, s, &self.sectors_data, &self.textures, p, window));
             }
 
         }
@@ -252,9 +204,6 @@ impl Renderer {
 
     // Methods
     pub fn draw(&mut self, p: &Player, window: &mut RenderWindow) {
-        // Texture::test_textures(0, &self.textures, window);
-
-
         let width  = RENDER_W as i32;
         let height = RENDER_H as i32;
 

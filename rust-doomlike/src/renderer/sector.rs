@@ -1,8 +1,5 @@
 use serde::Deserialize;
 
-use super::WIDTH;
-use super::RENDER_W;
-
 #[derive(Deserialize, Debug)]
 pub struct Sector {
     // Wall start and end
@@ -22,25 +19,4 @@ pub struct Sector {
 
     // Distance for drawing order
     pub dist: i32
-}
-
-impl Sector {
-    pub fn new() -> Self {
-        // Data is loaded from JSON file
-        Sector{
-            ws: 0,
-            we: 0,
-
-            z1: 0,
-            z2: 0,
-
-            surf_arr: vec![0; RENDER_W as usize],
-            surface: 0,
-
-            surface_texture: 0,
-            texture_scale: 0,
-
-            dist: 0
-        }
-    }
 }

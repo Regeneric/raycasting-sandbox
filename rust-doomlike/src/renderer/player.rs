@@ -34,10 +34,10 @@ impl Player {
     }
 
 
-    pub fn advance(&mut self, key: Key, velocity: i32) -> () {
+    pub fn advance(&mut self, key: Key, velocity: f32) -> () {
         // I can do `self.angle as usize` as well but I'm trying to be carefull
-        let delta_x = (self.sin[usize::try_from(self.angle).unwrap()] * velocity as f32) as i32;
-        let delta_y = (self.cos[usize::try_from(self.angle).unwrap()] * velocity as f32) as i32;
+        let delta_x = (self.sin[usize::try_from(self.angle).unwrap()] * velocity) as i32;
+        let delta_y = (self.cos[usize::try_from(self.angle).unwrap()] * velocity) as i32;
 
         match key {
             // Move forward/backward and rotate

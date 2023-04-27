@@ -18,22 +18,3 @@ pub struct Wall {
 
     pub shade: u8
 }
-
-impl Wall {
-    pub fn new() -> Self {
-        // Data is loaded from JSON file
-        Wall {
-            x1: 0,
-            y1: 0,
-
-            x2: 0,
-            y2: 0,
-
-            texture: 0,
-            u: 0,
-            v: 0,
-
-            shade: 0
-        }
-    }
-}
