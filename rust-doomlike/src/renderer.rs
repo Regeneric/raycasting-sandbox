@@ -1,13 +1,13 @@
 pub mod player;
+pub mod level;
     mod wall;
     mod sector;
-    mod level;
     mod texture;
 
 pub use crate::renderer::player::Player;
+pub use crate::renderer::level::Level;
     use crate::renderer::wall::Wall;
     use crate::renderer::sector::Sector;
-    use crate::renderer::level::Level;
     use crate::renderer::texture::Texture;
 
 use super::{RENDER_W, RENDER_H, FOV};
@@ -42,11 +42,11 @@ pub fn pixel(x: f32, y:  f32,  r: u8, g: u8, b: u8,  draw: bool, window: &mut Re
 
 
 pub struct Renderer {
-    _sectors: i32,
-    sectors_data: Vec<Sector>,
+    pub _sectors: i32,
+    pub sectors_data: Vec<Sector>,
 
-    _walls: i32,
-    walls_data: Vec<Wall>,
+    pub _walls: i32,
+    pub walls_data: Vec<Wall>,
 
     textures: Vec<Texture>,
 }
@@ -217,7 +217,7 @@ impl Renderer {
         let mut cycles: i32;
 
 
-        for s in 0..(self.sectors_data.len()-1) as usize {
+        for s in 0..(self.sectors_data.len()) as usize {
             for w in 0..(self.sectors_data.len()-s-1) {
                 if self.sectors_data[w].dist < self.sectors_data[w+1].dist {
                     self.sectors_data.swap(w, w+1);
@@ -319,5 +319,13 @@ impl Renderer {
                 self.sectors_data[s].dist = self.sectors_data[s].dist  /  (self.sectors_data[s].we - self.sectors_data[s].ws); 
             }
         }
+    }
+
+    pub fn reload_level(&mut self) {
+        let (w, s, sb, wb) = Level::level_loader();
+            self._sectors = s;
+            self._walls = w;
+            self.sectors_data = sb;
+            self.walls_data = wb;
     }
 }

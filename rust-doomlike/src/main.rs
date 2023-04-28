@@ -38,8 +38,8 @@ fn main() {
     let mut player = Player::new();
     let mut renderer = Renderer::new();
 
-    let (mut up, mut right, mut down, mut left, mut strafe_left, mut strafe_right, mut move_up, mut move_down, mut look_up, mut look_down) 
-      = (false, false, false, false, false, false, false, false, false, false);
+    let (mut up, mut right, mut down, mut left, mut strafe_left, mut strafe_right, mut move_up, mut move_down, mut look_up, mut look_down, mut reload_level) 
+      = (false, false, false, false, false, false, false, false, false, false, false);
 
     let mut clock = Clock::start();
     loop {
@@ -80,6 +80,9 @@ fn main() {
                 Event::KeyPressed  {code: Key::Down, ..} => look_down = true,
                 Event::KeyReleased {code: Key::Down, ..} => look_down = false,
 
+                Event::KeyPressed  {code: Key::Enter, ..} => reload_level = true,
+                Event::KeyReleased {code: Key::Enter, ..} => reload_level = false,
+
                 _ => {}
             }
         } window.clear(Color::rgb(80, 100, 80));
@@ -94,6 +97,7 @@ fn main() {
         if move_down {player.advance(Key::E, VELOCITY * delta_time);}
         if look_up   {player.advance(Key::Up,   VELOCITY);}
         if look_down {player.advance(Key::Down, VELOCITY);} 
+        if reload_level {renderer.reload_level();}
 
         renderer.draw(&player, &mut window);
 

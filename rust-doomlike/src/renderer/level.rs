@@ -18,7 +18,7 @@ pub struct Level {
 }
 impl Level {
     fn data_loader() -> Result<Level, Box<dyn Error>> {
-        let file = File::open("src/levels/level.json")?;
+        let file = File::open("src/levels/level.lvl")?;
         let reader = BufReader::new(file);
         let mut level: Level = serde_json::from_reader(reader).expect("Bad JSON file");
         
